@@ -1,4 +1,4 @@
-/*** gobackn.h
+/*** src/gobackn.h
  * Authors: Chris Ching and Jiwan Rosen
  ***/
 
@@ -14,9 +14,27 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-//TODO: Add ring buffer window
-#define BUFFSIZE 100
+//#include "ringbufferwindow.h"
+
+struct __ringbufferwindow; // Solution for circular dependency
 
 //TODO: Add ACK and packet stuff
+typedef struct {
+    struct __ringbufferwindow *buff;
+    //TODO
+} GBNSender;
+
+typedef struct {
+    struct __ringbufferwindow *buff;
+    //TODO
+} GBNReceiver;
+
+typedef struct {
+    //TODO
+} GBNPacket;
+
+typedef struct {
+    //TODO
+} GBNAck;
 
 #endif // h_gobackn
