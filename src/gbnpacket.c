@@ -1,6 +1,6 @@
 #include "gbnpacket.h"
 
-double send_packet(int socket_handler,struct sockaddr sendto, socklen_t sendto_len, GBNPacket *packet){
+int send_packet(int socket_handler,struct sockaddr sendto, socklen_t sendto_len, GBNPacket *packet){
   struct timeval now;
   int bytes_sent;
   double time_in_mill;
