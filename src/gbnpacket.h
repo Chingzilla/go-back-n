@@ -2,6 +2,7 @@
 //   Chris and Jiwan
 //
 
+#include <sys/time.h>
 #include "sendto_.h"
 
 #define MAXDATASIZE 1024
@@ -12,7 +13,7 @@ struct GBNPacket{
     int seq_num;              // sequence number   
     
     int recvd;                // packet recvd flag (returns 1->true, 0->false)
-    int send_time;            // timer value
+    double send_time;            // timer value
 }
 
 //**********************************************

@@ -1,13 +1,17 @@
 #include "gbnpacket.h"
 
+double send_packet(int socket_handler,struct sockaddr sendto, socklen_t sendto_len, GBNPacket *packet){
+  struct timeval now;
+  int bytes_sent;
+  double time_in_mill;
 
-int send_packet(int socket_handler,struct sockaddr sendto, socklen_t sendto_len, GBNPacket *packet){
-	int bytes_sent;
+  gettimeofday(&now, NULL);
+  time_in_mill = (tv.tv_sec)*1000 + (tv.tv_usec)/1000;
+  packet->send_time = time_in_mill;
 
-  
 	bytes_sent= sendto_(socket_handler, &packet, sizeof(packet), 0, (struct sockaddr*) &sendto, sendto_len);
 
-	return 0;
+	return bytes_sent;
 }
 
 
