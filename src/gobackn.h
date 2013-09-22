@@ -18,23 +18,28 @@
 
 struct __ringbufferwindow; // Solution for circular dependency
 
+#define DATASIZE 1024
+
 //TODO: Add ACK and packet stuff
 typedef struct {
     struct __ringbufferwindow *buff;
     //TODO
-} GBNSender;
+} *GBNSender;
 
 typedef struct {
     struct __ringbufferwindow *buff;
     //TODO
-} GBNReceiver;
+} *GBNReceiver;
 
 typedef struct {
     //TODO
-} GBNPacket;
+    char data[DATASIZE];
+    int seq_num;
+} *GBNPacket;
 
 typedef struct {
-    //TODO
-} GBNAck;
+    int seq_num;
+    int rev_win_size;
+} *GBNAck;
 
 #endif // h_gobackn
