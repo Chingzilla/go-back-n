@@ -20,7 +20,6 @@ START_TEST (test_ringbuffunc)
     ck_assert_int_eq(seq_add(BUFFSIZE - 5, 10), 5);
     ck_assert_int_eq(seq_add(-5, 5), 0);
     ck_assert_int_eq(seq_add(1, 6), 7);
-
 }
 END_TEST
 
@@ -33,10 +32,67 @@ Suite * test_ringbuffunc_create(){
     return s;
 }
 
+
+/********* Test RingBufferWindow Class **********/
+
+#define RBWSIZE 10
+RingBufferWindow rbw_common;
+
+void rbw_setup(void){
+    rbw_init(&rbw_common, RBWSIZE);
+
+    
+}
+
+void rbw_teardown(void){
+    free(rbw_common);
+}
+
+START_TEST (test_ringbuffer)
+{
+    // Test init class
+    ck_assert_int_eq(rbw_common->win_head, 0);
+    ck_assert_int_eq(sizeof(rbw_common->buffer), BUFFSIZE * 8);
+    ck_assert_int_eq(rbw_common->win_size, RBWSIZE);
+
+    // Test rbw_get_packet_n
+    GBNPacket p1, p2;
+    p1 = rbw_get_packet_n(rbw_common, 5);
+    p2 = rbw_get_packet_n(rbw_common, 5);
+    ck_assert(p1 == p2);
+    //p2 = rbw_get_packet_n(rbw_common, 0);
+    //ck_assert(rbw_common->win_head == p2->seq_num);
+
+    // Test rbw_set_win_size
+    rbw_set_win_size(rbw_common, 0);
+    ck_assert_int_eq(rbw_common->win_size, 0);
+
+    rbw_set_win_size(rbw_common, -1);
+    ck_assert_int_eq(rbw_common->win_size, 0);
+
+    rbw_set_win_size(rbw_common, 5);
+    ck_assert_int_eq(rbw_common->win_size, 5);
+
+    rbw_set_win_size(rbw_common, BUFFSIZE / 2);
+    ck_assert_int_eq(rbw_common->win_size, 5);
+}
+END_TEST
+
+Suite * test_ringbuff_create(){
+    Suite *s = suite_create("Ringbuffer Class");
+    TCase *tc_core = tcase_create("Core");
+    tcase_add_checked_fixture (tc_core, rbw_setup, rbw_teardown);
+    tcase_add_test(tc_core, test_ringbuffer);
+    suite_add_tcase(s, tc_core);
+
+    return s;
+}
+
+
 int main(void){
     int number_failed;
-    Suite *rbf = test_ringbuffunc_create();
-    SRunner *rbfr = srunner_create(rbf);
+    SRunner *rbfr = srunner_create(test_ringbuffunc_create());
+    srunner_add_suite(rbfr, test_ringbuff_create());
     srunner_run_all(rbfr, CK_NORMAL);
     number_failed = srunner_ntests_failed(rbfr);
     srunner_free(rbfr);
