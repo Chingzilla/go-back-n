@@ -16,7 +16,7 @@ int get_seq_diff(int n1, int n2){
 }
 
 int seq_add(int n1, int n2){
-    return (n1 + n2 + BUFFSIZE) % BUFFSIZE;
+    return get_seq_num(n1 + n2);
 }
 
 /*** RingBufferWindow class ***/

@@ -16,7 +16,7 @@ int get_seq_num(int);
 // Returns diffrents between given values, assumes n2 is after n1
 int get_seq_diff(int n1, int n2);
 
-// Returns sequence number, respects buffer boundaries
+// Returns sequence number of seq_num(n1) + n2, respects buffer boundaries
 int seq_add(int n1, int n2);
 
 /** class RingBufferWindow  **/
