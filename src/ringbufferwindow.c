@@ -40,6 +40,10 @@ int rbw_init(RingBufferWindow *pself, int win_size){
     RingBufferWindow self = *pself;
     self->win_head = 0;
     rbw_set_win_size(self, win_size);
+
+    for(int i=0; i < BUFFSIZE; i++){
+        self->buffer[i] = i;
+    }
     return 0;
 }
 

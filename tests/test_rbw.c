@@ -55,6 +55,10 @@ START_TEST (test_ringbuffer)
     ck_assert_int_eq(sizeof(rbw_common->buffer), BUFFSIZE * 8);
     ck_assert_int_eq(rbw_common->win_size, RBWSIZE);
 
+    for(int i=0; i < BUFFSIZE; i++){
+        ck_assert_int_eq(rbw_common->buffer[i], i);
+    }
+
     // Test rbw_get_packet_n
     GBNPacket p1, p2;
     p1 = rbw_get_packet_n(rbw_common, 5);
