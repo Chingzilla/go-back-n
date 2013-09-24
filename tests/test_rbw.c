@@ -85,6 +85,20 @@ START_TEST (test_ringbuffer)
 
     rbw_set_win_size(rbw_common, BUFFSIZE / 2);
     ck_assert_int_eq(rbw_common->win_size, 5);
+
+    // rbw_get_ack_n
+    GBNAck a1 = malloc(sizeof(GBNAckObj));
+    GBNAck a2 = malloc(sizeof(GBNAckObj));
+    
+    p1 = rbw_get_packet_n(rbw_common, 4);
+    rbw_get_ack_n(rbw_common, 4, a1);
+    ck_assert_int_eq(p1->seq_num, a1->seq_num);
+    ck_assert_int_eq(rbw_common->win_size, a1->rev_win_size);
+
+    // rbw_get_ack_of_packet
+    p2 = rbw_get_packet_n(rbw_common, 3);
+    rbw_get_ack_of_packet(rbw_common, a2, p2);
+    ck_assert_int_eq(p2->seq_num, a2->seq_num);
 }
 END_TEST
 

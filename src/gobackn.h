@@ -40,6 +40,6 @@ typedef struct {
 typedef struct {
     int seq_num;
     int rev_win_size;
-} GBNAckOBj, *GBNAck;
+} GBNAckObj, *GBNAck;
 
 #endif // h_gobackn
