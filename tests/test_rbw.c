@@ -99,6 +99,26 @@ START_TEST (test_ringbuffer)
     p2 = rbw_get_packet_n(rbw_common, 3);
     rbw_get_ack_of_packet(rbw_common, a2, p2);
     ck_assert_int_eq(p2->seq_num, a2->seq_num);
+
+    // rbw_int_head (warning changes class's variables)
+    int old_head = rbw_common->win_head;
+    rbw_inc_head(rbw_common, 5);
+    ck_assert_int_eq(rbw_common->win_head, old_head + 5);
+
+    rbw_inc_head(rbw_common, BUFFSIZE);
+    ck_assert_int_eq(rbw_common->win_head, old_head + 5);
+    
+    old_head = rbw_common->win_head;
+    rbw_inc_head(rbw_common, 1);
+    ck_assert_int_eq(rbw_common->win_head, old_head + 1);
+
+    rbw_inc_head(rbw_common, -1);
+    ck_assert_int_eq(rbw_common->win_head, old_head);
+
+    // rbw_inc_head_to_packet
+    rbw_inc_head_to_packet(rbw_common, rbw_common->buffer[50]);
+    ck_assert_int_eq(rbw_common->win_head, 50);
+
 }
 END_TEST
 
