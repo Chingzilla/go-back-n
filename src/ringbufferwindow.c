@@ -42,7 +42,8 @@ int rbw_init(RingBufferWindow *pself, int win_size){
     rbw_set_win_size(self, win_size);
 
     for(int i=0; i < BUFFSIZE; i++){
-        self->buffer[i] = i;
+        self->buffer[i] = malloc(sizeof(GBNPacketObj));
+        self->buffer[i]->seq_num = i;
     }
     return 0;
 }

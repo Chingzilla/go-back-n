@@ -56,7 +56,7 @@ START_TEST (test_ringbuffer)
     ck_assert_int_eq(rbw_common->win_size, RBWSIZE);
 
     for(int i=0; i < BUFFSIZE; i++){
-        ck_assert_int_eq(rbw_common->buffer[i], i);
+        ck_assert_int_eq(rbw_common->buffer[i]->seq_num, i);
     }
 
     // Test rbw_get_packet_n

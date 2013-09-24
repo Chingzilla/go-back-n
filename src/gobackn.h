@@ -33,13 +33,13 @@ typedef struct {
 
 typedef struct {
     //TODO
-    char data[DATASIZE];
     int seq_num;
-} *GBNPacket;
+    char data[DATASIZE];
+} GBNPacketObj, *GBNPacket;
 
 typedef struct {
     int seq_num;
     int rev_win_size;
-} *GBNAck;
+} GBNAckOBj, *GBNAck;
 
 #endif // h_gobackn
