@@ -60,12 +60,18 @@ START_TEST (test_ringbuffer)
     }
 
     // Test rbw_get_packet_n
-    GBNPacket p1, p2;
+    GBNPacket p1, p2, p3;
     p1 = rbw_get_packet_n(rbw_common, 5);
     p2 = rbw_get_packet_n(rbw_common, 5);
     ck_assert(p1 == p2);
-    //p2 = rbw_get_packet_n(rbw_common, 0);
-    //ck_assert(rbw_common->win_head == p2->seq_num);
+    p2 = rbw_get_packet_n(rbw_common, 0);
+    ck_assert(rbw_common->win_head == p2->seq_num);
+
+    // Test rbw_get_next_packet
+    p1 = rbw_get_packet_n(rbw_common, 0);
+    p2 = rbw_get_packet_n(rbw_common, 1);
+    p3 = rbw_get_next_packet(rbw_common, p1);
+    ck_assert(p3 == p2);
 
     // Test rbw_set_win_size
     rbw_set_win_size(rbw_common, 0);
