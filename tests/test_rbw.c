@@ -119,6 +119,18 @@ START_TEST (test_ringbuffer)
     rbw_inc_head_to_packet(rbw_common, rbw_common->buffer[50]);
     ck_assert_int_eq(rbw_common->win_head, 50);
 
+    // rwb_set_win_size
+    rbw_set_win_size(rbw_common, 2);
+    ck_assert_int_eq(rbw_common->win_size, 2);
+
+    rbw_set_win_size(rbw_common, 0);
+    ck_assert_int_eq(rbw_common->win_size, 0);
+    
+    rbw_set_win_size(rbw_common, BUFFSIZE / 2);
+    ck_assert_int_eq(rbw_common->win_size, 0);
+    
+    rbw_set_win_size(rbw_common, -5 );
+    ck_assert_int_eq(rbw_common->win_size, 0);
 }
 END_TEST
 
