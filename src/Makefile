@@ -5,11 +5,17 @@ CFLAGS = -ggdb -std=c99 -Wall
 
 libs = ringbufferwindow.o
 
-all: ${libs}
+all: GBNclient GBNserver
 
-client: client.c ${libs}
-	false
+clean:
+	rm -f ${libs}
+	rm -f GBNclient
+	rm -f GBNserver
 
-server: server.c ${libs}
-	false
+GBNclient: GBNclient.c ${libs}
+	${CC} ${CFLAGS} -o GBNclient GBNclient.c ${libs}
 
+GBNserver: GBNserver.c ${libs}
+	${CC} ${CFLAGS} -o GBNserver GBNserver.c ${libs}
+
+.PHONY: all clean

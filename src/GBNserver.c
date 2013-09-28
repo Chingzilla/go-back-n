@@ -12,7 +12,7 @@
 #include <string.h> /* memset() */
 #include <stdlib.h>
 #include <time.h>
-#include "sendto_h"
+#include "sendto_.h"
 
 int main(int argc, char *argv[]) {
 
