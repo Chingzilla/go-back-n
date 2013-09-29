@@ -6,7 +6,7 @@ double get_time_in_millisecs(){
 
      // Get the current time in milliseconds
     gettimeofday(&now, NULL);
-    time_in_mill = (tv.tv_sec)*1000 + (tv.tv_usec)/1000;
+    time_in_mill = (now.tv_sec)*1000 + (now.tv_usec)/1000;
     return time_in_mill;
 }
 
@@ -17,17 +17,17 @@ int send_packet(GBNPacket *self, int socket_handler, struct sockaddr_in sendto){
     char buffer[total_buf_size]; 
 
     // Convert seq num from int to char
-    snprintf(buffer,header_size,  "%d",self->seq_num);
+    snprintf(buffer,size_header,  "%d",self->seq_num);
     // Copy data from packet to buffer
     memcpy(buffer+4, self->data, MAXDATASIZE);
 
     // Send the packet to the server
-    bytes_sent= sendto_(socket_handler,buffer,(size_t) MAXDATASIZE, 0, (struct sockaddr*) &sendto, sizeof(sendto));
+    bytes_sent= sendto_(socket_handler,buffer, MAXDATASIZE, 0, (struct sockaddr *) &sendto, sizeof(sendto));
     // If  packet sent
     if(bytes_sent >0)
     { 
            // Set the send_time of the packet
-           self->send_time = time_in_mill;
+           self->send_time = get_time_in_millisecs();
     }
     return bytes_sent;
 }
