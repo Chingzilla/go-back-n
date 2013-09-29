@@ -18,11 +18,11 @@ int send_ack(GBNAck * self, int socket_handler, struct sockaddr_in sendto){
     // Send the buffer
     bytes_sent= sendto_(socket_handler,buffer, MAXACKSIZE ,0, (struct sockaddr*) &sendto, sizeof(sendto));
 
-    return nbytes_sent;
+    return bytes_sent;
 }
 
 
-int get_ack(GBNACk* self, int socket_handler, struct sockaddr* from) {
+int get_ack(GBNAck* self, int socket_handler, struct sockaddr_in from) {
     int MAXACKSIZE = 5+4;
     char buffer[MAXACKSIZE];
     char c_seq_num[5];
