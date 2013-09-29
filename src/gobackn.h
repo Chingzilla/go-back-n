@@ -1,6 +1,6 @@
 /*** src/gobackn.h
- * Authors: Chris Ching and Jiwan Rosen
- ***/
+* Authors: Chris Ching and Jiwan Rana
+***/
 
 #ifndef h_gobackn
 #define h_gobackn
@@ -13,6 +13,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+// #include "sendto_.h"
+
+#include "gbnpacket.h"
+#include "gbnack.h"
 
 //#include "ringbufferwindow.h"
 
@@ -31,15 +35,15 @@ typedef struct {
     //TODO
 } *GBNReceiver;
 
-typedef struct {
-    //TODO
-    int seq_num;
-    char data[DATASIZE];
-} GBNPacketObj, *GBNPacket;
+// typedef struct {
+//     //TODO
+//     int seq_num;
+//     char data[DATASIZE];
+// } GBNPacketObj, *GBNPacket;
 
-typedef struct {
-    int seq_num;
-    int rev_win_size;
-} GBNAckObj, *GBNAck;
+// typedef struct {
+//     int seq_num;
+//     int rev_win_size;
+// } GBNAckObj, *GBNAck;
 
 #endif // h_gobackn
