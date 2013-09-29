@@ -4,6 +4,7 @@
 #ifndef h_gbnpacket
 #define h_gbnpacket
 
+#include <stdio.h>
 #include <sys/time.h>
 #include <strings.h>
 #include <sys/types.h>
@@ -11,7 +12,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include "sendto_.h"
+// #include "sendto_.h"
 
 #define MAXDATASIZE 1024
 

@@ -5,12 +5,13 @@
 #ifndef h_gbnack
 #define h_gbnack
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <strings.h>
-#include "sendto_.h"
+// #include "sendto_.h"
 
 typedef struct {
     int seq_num;              // Sequence number
