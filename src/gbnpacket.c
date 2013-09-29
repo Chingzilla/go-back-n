@@ -1,33 +1,61 @@
 #include "gbnpacket.h"
 
-int send_packet(int socket_handler,struct sockaddr sendto, socklen_t sendto_len, GBNPacket *packet){
-  struct timeval now;
-  int bytes_sent;
-  double time_in_mill;
+double get_time_in_millisecs(){
+    struct timeval now;
+    double time_in_mill;
 
-  gettimeofday(&now, NULL);
-  time_in_mill = (tv.tv_sec)*1000 + (tv.tv_usec)/1000;
-  packet->send_time = time_in_mill;
-
-	bytes_sent= sendto_(socket_handler, &packet, sizeof(packet), 0, (struct sockaddr*) &sendto, sendto_len);
-
-	return bytes_sent;
+     // Get the current time in milliseconds
+    gettimeofday(&now, NULL);
+    time_in_mill = (tv.tv_sec)*1000 + (tv.tv_usec)/1000;
+    return time_in_mill;
 }
 
+int send_packet(GBNPacket *self, int socket_handler, struct sockaddr_in sendto){
+    int bytes_sent;
+    int size_header = 4+1; // +1 for the null terminator
+    int total_buf_size = size_header + MAXDATASIZE; // the null terminator is already accounted for in size_header
+    char buffer[total_buf_size]; 
 
-GBNPacket get_packet (int socket_handler, struct sockaddr from, socketlen_t from_len){
-   	struct GBNPacket rcvd_packet;
-   	int bytes_rcvd;
+    // Convert seq num from int to char
+    snprintf(buffer,header_size,  "%d",self->seq_num);
+    // Copy data from packet to buffer
+    memcpy(buffer+4, self->data, MAXDATASIZE);
 
-    bytes_rcvd = recvfrom(socket_handler, &rcvd_packet, sizeof (rcvd_packet), 0, (struct sockaddr*) &from, from_len);
-    if (bytes_rcvd > 0){
-    	    // Set the received flag on
-    	    rcvd_packet.recvd = 1;	
+    // Send the packet to the server
+    bytes_sent= sendto_(socket_handler,buffer,(size_t) MAXDATASIZE, 0, (struct sockaddr*) &sendto, sizeof(sendto));
+    // If  packet sent
+    if(bytes_sent >0)
+    { 
+           // Set the send_time of the packet
+           self->send_time = time_in_mill;
     }
-    return rcvd_packet;   
+    return bytes_sent;
 }
 
-void clear(GBNPacket *packet){
-	packet->recvd = 0;
-	packet->send_time = 0;
+
+int get_packet (GBNPacket* self,int socket_handler, struct sockaddr_in from){
+    int bytes_rcvd;
+    int MAXBUFSIZE = 1024 + 5; // data + header
+    char buffer[MAXBUFSIZE];
+    char header[5];
+    unsigned int from_len;
+
+    bytes_rcvd = recvfrom(socket_handler, buffer, MAXBUFSIZE , 0, (struct sockaddr*) &from, &from_len);
+    if (bytes_rcvd > 0){
+        // copy the sequence number to the packet = first 4 bytes
+        memcpy(header, buffer , 4);
+        self->seq_num = atoi(header);
+
+         // copy the received data to the packet
+        memcpy(self->data, buffer+4, MAXDATASIZE);
+
+        //set the received flag on
+        self->recvd =1;
+    }
+    return bytes_rcvd;
+}
+
+void clear(GBNPacket *self){
+	self->recvd = 0;
+	self->send_time = 0;
 }

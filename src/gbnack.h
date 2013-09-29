@@ -1,6 +1,10 @@
 //Authors:
 //   Chris and Jiwan
 //
+
+#ifndef h_gbnack
+#define h_gbnack
+
 #include "sendto_.h"
 
 struct GBNAck{
@@ -14,12 +18,11 @@ struct GBNAck{
 
 // Function to send ack struct
 // Return value -> number of bytes sent to the remote addr defined by struct sockaddr sento
-int send_ack(int socket_handler,struct sockaddr sendto, socklen_t sendto_len, GBNAck *ack);
-
+int send_ack(GBNAck * self, int socket_handler, struct sockaddr_in sendto);
 
 // Function to get ack 
-// Return value -> GBNAck struct
-GBNACk get_ack (int socket_handler.struct sockaddr* from, socketlen_t from_len);
+// Return value -> number of bytes received
+int get_ack(GBNACk* self, int socket_handler, struct sockaddr* from);
 
-
+#endif
 
