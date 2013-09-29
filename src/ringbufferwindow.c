@@ -1,6 +1,6 @@
 /*** src/ringbufferwindow.c
- * Authors: Chris Ching and Jiwan Rosen
- ***/
+* Authors: Chris Ching and Jiwan Rana
+***/
 
 #include "ringbufferwindow.h"
 
@@ -16,7 +16,7 @@ int get_seq_diff(int n1, int n2){
 }
 
 int seq_add(int n1, int n2){
-    return (n1 + n2 + BUFFSIZE) % BUFFSIZE;
+    return get_seq_num(n1 + n2);
 }
 
 /*** RingBufferWindow class ***/
@@ -25,7 +25,8 @@ int seq_add(int n1, int n2){
 
 // clears packages from window's head to n packages
 int rbw_clear_to_n(RingBufferWindow self, int n){
-    for (int i = 0; i < n; i++){
+    int i;
+    for (i = 0; i < n; i++){
         // TODO
         //gbnp_clear(get_packet_n(self, i))
     }
@@ -40,6 +41,11 @@ int rbw_init(RingBufferWindow *pself, int win_size){
     RingBufferWindow self = *pself;
     self->win_head = 0;
     rbw_set_win_size(self, win_size);
+    int i;
+    for(i=0; i < BUFFSIZE; i++){
+        self->buffer[i] = malloc(sizeof(GBNPacketObj));
+        self->buffer[i]->seq_num = i;
+    }
     return 0;
 }
 

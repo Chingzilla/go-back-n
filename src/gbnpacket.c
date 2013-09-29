@@ -10,7 +10,7 @@ double get_time_in_millisecs(){
     return time_in_mill;
 }
 
-int send_packet(GBNPacket *self, int socket_handler, struct sockaddr_in sendto){
+int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
     int bytes_sent;
     int size_header = 4+1; // +1 for the null terminator
     int total_buf_size = size_header + MAXDATASIZE; // the null terminator is already accounted for in size_header
@@ -33,7 +33,7 @@ int send_packet(GBNPacket *self, int socket_handler, struct sockaddr_in sendto){
 }
 
 
-int get_packet (GBNPacket* self,int socket_handler, struct sockaddr_in from){
+int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in from){
     int bytes_rcvd;
     int MAXBUFSIZE = 1024 + 5; // data + header
     char buffer[MAXBUFSIZE];
@@ -55,7 +55,7 @@ int get_packet (GBNPacket* self,int socket_handler, struct sockaddr_in from){
     return bytes_rcvd;
 }
 
-void clear(GBNPacket *self){
+void clear(GBNPacket self){
 	self->recvd = 0;
 	self->send_time = 0;
 }

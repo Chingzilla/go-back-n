@@ -6,23 +6,23 @@
 
 #include <sys/time.h>
 #include <strings.h>
-#include "sendto_.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#include "sendto_.h"
+
 #define MAXDATASIZE 1024
 
-typedef struct GBNPacket{   
+typedef struct{   
     char data[MAXDATASIZE];   // data
     int size;                 // size of data
     int seq_num;              // sequence number   
     
     int recvd;                         // packet recvd flag (returns 1->true, 0->false)
     double send_time;            // timer value
-} GBNPacket;
+} GBNPacketObj,*GBNPacket;
 
 //**********************************************
 // Function definition:
@@ -30,15 +30,15 @@ typedef struct GBNPacket{
 
 // Function to send packet struct
 // Return value -> number of bytes sent to the remote addr defined by struct sockaddr sento
-int send_packet(GBNPacket *self, int socket_handler, struct sockaddr_in sendto);
+int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto);
 
 // Function to get packet struct
 // Return value -> number of bytes received
-int get_packet (GBNPacket* self, int socket_handler, struct sockaddr_in from);
+int get_packet (GBNPacket self, int socket_handler, struct sockaddr_in from);
 
 // Function that resets the recvd and send_time flag
 // Return value -> void
-void clear(GBNPacket *self);      
+void clear(GBNPacket self);      
 
 // Function to get currenct time in milliseconds
 // Return value-> time in milliseconds

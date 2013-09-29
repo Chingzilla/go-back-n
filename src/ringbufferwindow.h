@@ -1,6 +1,6 @@
 /*** src/ringbufferwindow.h
- * Authors: Chris Ching and Jiwan Rosen
- ***/
+* Authors: Chris Ching and Jiwan Rana
+***/
 
 #ifndef ringbufferwindow_h
 #define ringbufferwindow_h
@@ -16,10 +16,10 @@ int get_seq_num(int);
 // Returns diffrents between given values, assumes n2 is after n1
 int get_seq_diff(int n1, int n2);
 
-// Returns sequence number, respects buffer boundaries
+// Returns sequence number of seq_num(n1) + n2, respects buffer boundaries
 int seq_add(int n1, int n2);
 
-/** class RingBufferWindow  **/
+/** class RingBufferWindow **/
 typedef struct __ringbufferwindow {
     GBNPacket buffer[BUFFSIZE];
     int win_size;
@@ -29,7 +29,7 @@ typedef struct __ringbufferwindow {
 // Initialize RingBufferWindow
 int rbw_init(RingBufferWindow *pself, int win_size);
 
-// Get packet in buffer matching (seq number) 
+// Get packet in buffer matching (seq number)
 // Returns packet that is at offset 'n' from window head
 GBNPacket rbw_get_packet_n(RingBufferWindow self, int n);
 
