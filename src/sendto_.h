@@ -11,29 +11,29 @@ static int p_threshold;
 static int c_threshold;
 static int count = 1;
 
-void init_net_lib(double f1, unsigned int seed)
+void init_net_lib(double probability, unsigned int seed)
 {
-	if ((f1 < 0) || (f1 > 1)) {
-		printf("%f : Error in setting packet lost probability!\n",f1);
-		exit(0);
+	if ((probability < 0) || (probability > 1)) {
+		printf("%f : Error in setting packet lost probability!\n",probability);
+		exit(1);
 	}
 	else {
 		srand(seed);
-		p_threshold = (int)(f1 * 1000);
+		p_threshold = (int)(probability * 1000);
 	}
 
 }
 
-int sendto_(int i1, void* c1, int i2, int i3, struct sockaddr* sa, int i4)
+int sendto_(int sock, void* message, int length, int flags, struct sockaddr* sa, int dest_len)
 {
 	int rnd;
 	double rnd_max = (double)RAND_MAX;
 
 	rnd = ((rand() / rnd_max) * 1000);
 	if (rnd > p_threshold) {
-		return sendto(i1, c1, i2, i3, sa, i4);
+		return sendto(sock, message, length, flags, sa, dest_len);
 	}
-	return i2;
+	return length;
 }
 
 #endif
