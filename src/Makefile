@@ -3,7 +3,7 @@
 CC = gcc
 CFLAGS = -ggdb -std=c99 -Wall
 
-libs = ringbufferwindow.o
+libs = ringbufferwindow.o gbnpacket.o gbnack.o sendto_.o
 
 all: GBNclient GBNserver
 
