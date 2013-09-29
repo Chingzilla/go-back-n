@@ -104,8 +104,7 @@ int rbw_set_win_size(RingBufferWindow self, int size){
 
 int rbw_put_packet(RingBufferWindow self, GBNPacket packet){
     GBNPacket my_packet = self->buffer[packet->seq_num];
-    //TODO
-    //gbnp_copy(packet, my_packet);
+    gbnp_copy(packet, my_packet);
     return 0;
 }
 

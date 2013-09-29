@@ -37,6 +37,9 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto);
 // Return value -> number of bytes received
 int get_packet (GBNPacket self, int socket_handler, struct sockaddr_in from);
 
+// Copies data from other
+int gbnp_copy(GBNPacket self, GBNPacket other);
+
 // Function that resets the recvd and send_time flag
 // Return value -> void
 void clear(GBNPacket self);      

@@ -55,6 +55,13 @@ int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in from){
     return bytes_rcvd;
 }
 
+int gbnp_copy(GBNPacket self, GBNPacket other){
+    if( memcpy(self->data, other->data, MAXDATASIZE) == NULL);
+        fprintf(stderr, "Error copying data to packet\n");
+        return 1;
+    return 0;
+}
+
 void clear(GBNPacket self){
 	self->recvd = 0;
 	self->send_time = 0;
