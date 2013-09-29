@@ -1,3 +1,6 @@
+#ifndef h_sendto
+#define h_sendto
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -32,3 +35,5 @@ int sendto_(int i1, void* c1, int i2, int i3, struct sockaddr* sa, int i4)
 	}
 	return i2;
 }
+
+#endif
