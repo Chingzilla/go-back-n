@@ -8,7 +8,7 @@
 #include "gobackn.h"
 
 //TODO: Add ring buffer window
-#define BUFFSIZE 100
+#define BUFFSIZE 1000
 
 // Return sequence number of given value (using mod)
 int get_seq_num(int);
@@ -24,6 +24,7 @@ typedef struct __ringbufferwindow {
     GBNPacket buffer[BUFFSIZE];
     int win_size;
     int win_head;
+    int win_last_frame;
 } RingBufferWindowObj, *RingBufferWindow;
 
 // Initialize RingBufferWindow
@@ -53,6 +54,9 @@ int rbw_set_win_size(RingBufferWindow self, int size);
 
 // Copies given packet into buffer memory
 int rbw_put_packet(RingBufferWindow self, GBNPacket packet);
+
+// Returns relitive posiotion of packet relitive to head
+int rbw_get_n(RingBufferWindow self, GBNPacket packet);
 
 // Returns next packet in window, returns NULL if at the end of window
 GBNPacket rbw_get_next_in_window(RingBufferWindow self, GBNPacket);
