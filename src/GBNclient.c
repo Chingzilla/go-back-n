@@ -16,6 +16,10 @@
 #include <unistd.h>
 #include "sendto_.h"
 
+#include "gobackn.h"
+
+const int EFFECTIVE_DATA_SIZE = MAXDATASIZE-1;
+
 int main(int argc, char *argv[]) {
     
 	/* check command line args. */
@@ -45,18 +49,62 @@ int main(int argc, char *argv[]) {
 	remoteServAddr.sin_addr.s_addr = inet_addr(argv[1]); //sets remote IP address
 	printf("%s: sending data to '%s:%s' \n", argv[0], argv[1], argv[2]);
 
-	// Initialize the ring buffer
-	
-
 	// Read in the data file: 
-	FILE* fd_send_file;
-	fd_send_file = fopen(argv[5],"rb");
+	FILE* fd;
+	fd = fopen(argv[5],"rb");
+	if(fd == NULL){
+		printf("Error opening the send file\n");
+		exit(1);
+	}
 
+	// Get the size of the file to figure out the number of packets needed
+	 long int size;
+            fseek(fd, 0, SEEK_END); // seek to end of file
+            size = ftell(fd); // get current file pointer
+            fseek(fd, 0, SEEK_SET); // seek back to beginning of file          
+            // printf("%ld \n",size);
+
+            int num_packets;
+            if ((int) size % (EFFECTIVE_DATA_SIZE) == 0){
+                 num_packets = (int) size / (EFFECTIVE_DATA_SIZE);
+                  // printf("%d\n", num_packets);
+            }
+            else{
+                num_packets = (int) size/(EFFECTIVE_DATA_SIZE) +1;
+                // printf("%d\n", num_packets);
+            }	
+
+            GBNPacket data_packets[num_packets];
+              // Allocate memory for packets
+            int i;
+            for (i=0; i<num_packets; i++){
+                data_packets[i] = (GBNPacket) malloc(sizeof(GBNPacket));
+                 memset(data_packets[i],'\0',sizeof(GBNPacketObj)); // Free the memory of the packet 
+            }
+
+            // Open the send file and create packets
+            size_t retVal;
+            for (i =0; i<num_packets;i++){
+                if(i < num_packets-1){              
+                        retVal = fread(data_packets[i]->data, 1, EFFECTIVE_DATA_SIZE, fd);
+                        data_packets[i]->data[MAXDATASIZE]='\0';
+                        if(retVal != EFFECTIVE_DATA_SIZE){
+                            printf("Reading Error\n");
+                            printf("%d\n", (int)retVal);
+                        }
+                }
+                else{
+                        // Last packet case:
+                       size_t leftBytes = (int) size % EFFECTIVE_DATA_SIZE;
+                        retVal = fread(data_packets[i]->data, 1,leftBytes, fd);
+                        data_packets[i]->data[leftBytes+1]='\0';                  
+                        if(retVal != leftBytes){
+                            printf("Reading Error\n");
+                            printf("%d\n", (int)retVal);
+                        }
+                }   
+            }
 	
-
-
-	// Generate packets and put into the ring buffer
-
 
 	// while (within sender window size)
 		// send packets
