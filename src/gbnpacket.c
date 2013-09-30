@@ -56,7 +56,8 @@ int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in from){
 }
 
 int gbnp_copy(GBNPacket self, GBNPacket other){
-    if( memcpy(self->data, other->data, MAXDATASIZE) == NULL){
+    
+    if( memcpy(self, other, sizeof(GBNPacketObj)) == NULL){
         fprintf(stderr, "Error copying data to packet\n");
         return 1;
     }
