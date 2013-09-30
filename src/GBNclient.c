@@ -17,8 +17,11 @@
 #include "sendto_.h"
 
 #include "gobackn.h"
+#include "ringbufferwindow.h"
 
 const int EFFECTIVE_DATA_SIZE = MAXDATASIZE-1;
+
+#define true 1
 
 int main(int argc, char *argv[]) {
     
@@ -50,6 +53,7 @@ int main(int argc, char *argv[]) {
 	printf("%s: sending data to '%s:%s' \n", argv[0], argv[1], argv[2]);
 
 	// Read in the data file: 
+	printf("%s\n", argv[5]);
 	FILE* fd;
 	fd = fopen(argv[5],"rb");
 	if(fd == NULL){
@@ -104,8 +108,36 @@ int main(int argc, char *argv[]) {
                         }
                 }   
             }
-	
 
+            // Initialize sender window buffer, LAR, LFS:
+            RingBufferWindow sender_window_bufer;
+   	const int SWS = 6;
+   	int LAR = -1;
+   	int LFS = -1;
+
+   	int init_val = 200;
+   	 if(rbw_init(&sender_window_bufer, init_val) != 0){
+        		fprintf(stderr, "Error creating ringbuffer\n");
+        		exit(1);
+    	}
+
+    	// Copy all the packets to the sender window buffer:
+    	for (i =0; i < num_packets; i++){
+    		if(rbw_put_packet(sender_window_bufer, data_packets[i]) != 0){
+    			fprintf(stderr, "Error putting packet into ringbuffer\n");
+    		}
+    	}
+
+    	// // Test creation of packets
+    	// for(i=0; i<num_packets;i++){
+    	// 	printf("%d\n", data_packets[i]->seq_num);
+    	// }
+    	
+
+    	while(true){
+
+
+    	}
 	// while (within sender window size)
 		// send packets
 
@@ -122,14 +154,14 @@ int main(int argc, char *argv[]) {
 
 
 
-	/* Call sendto_ in order to simulate dropped packets */
-	int nbytes;
-	char msg[] = "send this";
-	unsigned int remote_length;
-	nbytes = sendto_(sd,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr, sizeof(remoteServAddr));
-	if (nbytes > 0){
-		printf("Sent first message\n");
-	}
+	// /* Call sendto_ in order to simulate dropped packets */
+	// int nbytes;
+	// char msg[] = "send this";
+	// unsigned int remote_length;
+	// nbytes = sendto_(sd,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr, sizeof(remoteServAddr));
+	// if (nbytes > 0){
+	// 	printf("Sent first message\n");
+	// }
 
 	return 0;
 }
