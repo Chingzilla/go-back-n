@@ -11,8 +11,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <string.h>
+#include <stdlib.h>
 
-// #include "sendto_.h"
+#include "sendto_.h"
 
 #define MAXDATASIZE 1024
 
