@@ -158,6 +158,9 @@ int main(int argc, char *argv[]) {
             int  ret_select;
             int recv_free_win_size = -1;
 
+            int j=0;
+            int resend;
+
             FD_ZERO(&rfds);
             FD_SET(sd, &rfds);
 
@@ -184,10 +187,10 @@ int main(int argc, char *argv[]) {
                             else{
                                 // Log
                                 if (recv_free_win_size >0){
-                                     fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
+                                     fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f> \n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
                                 }else
                                 {
-                                     fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, LAR, LFS, to_send->send_time);
+                                     fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f>\n", to_send->seq_num, LAR, LFS, to_send->send_time);
                                 }
                                
                                 //Packet sent:
@@ -226,7 +229,7 @@ int main(int argc, char *argv[]) {
 
                                     // Log
                                     // Todo : add time
-                                    fprintf(fd_log, "<Receive> <%d> <%d> <%d> <%d> %s\n", received_ack->seq_num, received_ack->rev_win_size, LAR, LFS);
+                                    fprintf(fd_log, "<Receive> <%d> <%d> <%d> <%d>\n", received_ack->seq_num, received_ack->rev_win_size, LAR, LFS);
 
                                     // Check if the received ack matches the seq num of LAR+1:
                                     if(received_ack->seq_num = to_wait->seq_num){
@@ -240,9 +243,8 @@ int main(int argc, char *argv[]) {
                             }   
                              else{
                                     printf("No ACK received. Need to resend data\n");
-                                    int j;
-                                    int resend;
-                                    for (j= LAR+1, j <= LFS; j++){
+                              
+                                    for (j= LAR+1; j <= LFS; j++){
                                            to_send = rbw_get_packet_n(sender_window_bufer, j);
                                           resend = send_packet(to_send ,sd, remoteServAddr);
                                           if(resend <= 0){
@@ -250,10 +252,10 @@ int main(int argc, char *argv[]) {
                                           }
                                         // Log
                                         if (recv_free_win_size >0){
-                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
+                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f>\n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
                                          }else
                                         {
-                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, LAR, LFS, to_send->send_time);
+                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f>\n", to_send->seq_num, LAR, LFS, to_send->send_time);
                                         }                          
                             }
 
@@ -264,7 +266,7 @@ int main(int argc, char *argv[]) {
 
             fclose(fd_log);
             fclose(fd);
-            
+
 	// while (within sender window size)
 		// send packets
 
