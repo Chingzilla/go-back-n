@@ -66,32 +66,29 @@ int main(int argc, char *argv[]) {
             fseek(fd, 0, SEEK_END); // seek to end of file
             size = ftell(fd); // get current file pointer
             fseek(fd, 0, SEEK_SET); // seek back to beginning of file          
-            // printf("%ld \n",size);
+            printf("%ld \n",size);
 
             int num_packets;
             if ((int) size % (EFFECTIVE_DATA_SIZE) == 0){
                  num_packets = (int) size / (EFFECTIVE_DATA_SIZE);
-                  // printf("%d\n", num_packets);
             }
             else{
                 num_packets = (int) size/(EFFECTIVE_DATA_SIZE) +1;
-                // printf("%d\n", num_packets);
             }	
 
-            GBNPacket data_packets[num_packets];
-              // Allocate memory for packets
+            // Create packetObj array in stack: 
+            GBNPacketObj data_packets[num_packets];
             int i;
-            for (i=0; i<num_packets; i++){
-                data_packets[i] = (GBNPacket) malloc(sizeof(GBNPacket));
-                 memset(data_packets[i],'\0',sizeof(GBNPacketObj)); // Free the memory of the packet 
-            }
-
-            // Open the send file and create packets
             size_t retVal;
             for (i =0; i<num_packets;i++){
-                if(i < num_packets-1){              
-                        retVal = fread(data_packets[i]->data, 1, EFFECTIVE_DATA_SIZE, fd);
-                        data_packets[i]->data[MAXDATASIZE]='\0';
+                if(i < num_packets-1){   
+                    // printf("Packet %d\n", i);           
+                        // Read the data 
+                        retVal = fread(data_packets[i].data, sizeof(char), EFFECTIVE_DATA_SIZE, fd);
+                        // Set the size
+                        data_packets[i].data[MAXDATASIZE]='\0';
+                        data_packets[i].size = retVal +1;
+                        data_packets[i].seq_num =i;
                         if(retVal != EFFECTIVE_DATA_SIZE){
                             printf("Reading Error\n");
                             printf("%d\n", (int)retVal);
@@ -99,16 +96,22 @@ int main(int argc, char *argv[]) {
                 }
                 else{
                         // Last packet case:
+                    printf("Last packet \n");
                        size_t leftBytes = (int) size % EFFECTIVE_DATA_SIZE;
-                        retVal = fread(data_packets[i]->data, 1,leftBytes, fd);
-                        data_packets[i]->data[leftBytes+1]='\0';                  
+                        retVal = fread(data_packets[i].data, sizeof(char),leftBytes, fd);
+                        data_packets[i].data[leftBytes+1]='\0';    
+                         data_packets[i].size = retVal +1;     
+                         data_packets[i].seq_num = i;       
                         if(retVal != leftBytes){
                             printf("Reading Error\n");
                             printf("%d\n", (int)retVal);
                         }
-                }   
+                } 
+                // printf("%d\n",(int) retVal);
+                // Reset retval:
+                retVal = 0;      
             }
-
+            
             // Initialize sender window buffer, LAR, LFS:
             RingBufferWindow sender_window_bufer;
    	const int SWS = 6;
@@ -123,21 +126,109 @@ int main(int argc, char *argv[]) {
 
     	// Copy all the packets to the sender window buffer:
     	for (i =0; i < num_packets; i++){
-    		if(rbw_put_packet(sender_window_bufer, data_packets[i]) != 0){
+                        printf("%d\n", i);
+    		if(rbw_put_packet(sender_window_bufer, &data_packets[i]) != 0){
     			fprintf(stderr, "Error putting packet into ringbuffer\n");
+                                  exit(1);
     		}
+                        // else{
+                        //         printf("Success putting packet %d to the buffer\n",i );
+                        // }
+                    if(rbw_inc_head(sender_window_bufer, 1) !=0){   
+                        printf("Error increamenting head\n");
+                    }
+                    // else{
+                    //     printf(" Head incremented to %d \n", i+1);
+                    // }  
     	}
 
-    	// // Test creation of packets
-    	// for(i=0; i<num_packets;i++){
-    	// 	printf("%d\n", data_packets[i]->seq_num);
-    	// }
-    	
+        // Set the ring buffer window head to start:
+        sender_window_bufer->win_head = 0;
+        printf("%d\n", sender_window_bufer->win_head);
 
-    	while(true){
+        // Get first packet to send:
+         GBNPacket to_send, to_wait;
+         to_send= rbw_get_packet_n(sender_window_bufer,0);
+
+         printf("%d\n", to_wait->seq_num);
 
 
-    	}
+            // Initialize variables for select:
+            fd_set rfds;
+            int  ret_select;
+
+            FD_ZERO(&rfds);
+            FD_SET(sd, &rfds);
+
+         // TODO: change the loop to loop throughtout the length of data packets
+           while(true)
+                        // Within sender window size
+                        while(LAR + 1+ LFS < SWS){
+                            // Send packets
+                            int  bytesSent;
+                           
+                            bytesSent = send_packet(to_send ,sd, remoteServAddr);
+                            if(bytesSent <= 0){
+                                 printf("Error sending packet!\n");
+                            }
+                            else{
+                                //Packet sent:
+                                // Increment the LFS pointer:
+                                LFS +=1;
+
+                                // Increment the head of the ring buffer window:
+                                if(rbw_inc_head(sender_window_bufer, 1) !=0){   
+                                         printf("Error increamenting head\n");
+                                }
+
+                                // Get the next packet to send:
+                                to_send = rbw_get_next_packet(sender_window_bufer, to_send);
+                            }
+
+                        // Wait for Ack on LAR+1 from the server:
+                            to_wait = rbw_get_packet_n(sender_window_bufer, LAR+1);
+
+                            double now_millisecs = get_time_in_millisecs();
+                            double wait_time_millisecs = 50 - now_millisecs - to_wait->send-time;
+
+                            struct timeval tv;
+                            tv.tv_sec = 0;
+                            tv.tv_usec = wait_time_millisecs * 1000;
+
+                            ret_select = select(1, &rfds, NULL, NULL, &tv);
+                            if(FD_ISSET(sd, &rfds) == 1){
+                                    printf("ACK available now\n");
+                                    GBNAck received_ack;
+                                    received_ack = (GBNAck) malloc(sizeof(GBNAckObj));
+                                    int ack_bytes;
+                                    ack_bytes = get_ack(received_ack, sd, remoteServAddr);
+                                    if(ack_bytes <= 0){
+                                        printf(" Error: %d bytes of ACK received\n", ack_bytes);
+                                    }
+
+                                    // Slide the LAR window forward:
+                                    LAR += 1;                                    
+                            }   
+                             else{
+                                    printf("No ACK received. Need to resend data\n");
+                                    int j;
+                                    int resend;
+                                    for (j= LAR+1, j <= LFS; j++){
+                                           to_send = rbw_get_packet_n(sender_window_bufer, j);
+                                          resend = send_packet(to_send ,sd, remoteServAddr);
+                                          if(resend <= 0){
+                                            printf("Error resending data!!!\n");
+                                          }
+                                    }
+
+                            }
+
+                    }
+
+
+            }
+
+
 	// while (within sender window size)
 		// send packets
 
@@ -151,17 +242,6 @@ int main(int argc, char *argv[]) {
 
 		// else data is not received at all until timeout
 		// so resend all packets from LAR+1 to LFS.
-
-
-
-	// /* Call sendto_ in order to simulate dropped packets */
-	// int nbytes;
-	// char msg[] = "send this";
-	// unsigned int remote_length;
-	// nbytes = sendto_(sd,msg, strlen(msg),0, (struct sockaddr *) &remoteServAddr, sizeof(remoteServAddr));
-	// if (nbytes > 0){
-	// 	printf("Sent first message\n");
-	// }
 
 	return 0;
 }
