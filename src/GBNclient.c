@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
             
             // Initialize sender window buffer, LAR, LFS:
             RingBufferWindow sender_window_bufer;
-   	const int SWS = 6;
+           int SWS = 6;
    	int LAR = -1;
    	int LFS = -1;
 
@@ -153,17 +153,27 @@ int main(int argc, char *argv[]) {
          printf("%d\n", to_wait->seq_num);
 
 
-            // Initialize variables for select:
+                // Initialize variables for select:
             fd_set rfds;
             int  ret_select;
+            int recv_free_win_size = -1;
 
             FD_ZERO(&rfds);
             FD_SET(sd, &rfds);
 
+            // Open log file:
+            FILE* fd_log;
+            fd_log = fopen(argv[6],"w");
+
          // TODO: change the loop to loop throughtout the length of data packets
-           while(true)
+           while(LFS < num_packets)
+                        // Check to see if receiver advertised its free window size:
+                        if(recv_free_win_size > 0){
+                            SWS = recv_free_win_size;
+                        }
+
                         // Within sender window size
-                        while(LAR + 1+ LFS < SWS){
+                        while((LFS - (LAR+1) )< SWS){
                             // Send packets
                             int  bytesSent;
                            
@@ -172,8 +182,16 @@ int main(int argc, char *argv[]) {
                                  printf("Error sending packet!\n");
                             }
                             else{
+                                // Log
+                                if (recv_free_win_size >0){
+                                     fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
+                                }else
+                                {
+                                     fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, LAR, LFS, to_send->send_time);
+                                }
+                               
                                 //Packet sent:
-                                // Increment the LFS pointer:
+                                // Increment the LFS:
                                 LFS +=1;
 
                                 // Increment the head of the ring buffer window:
@@ -189,7 +207,7 @@ int main(int argc, char *argv[]) {
                             to_wait = rbw_get_packet_n(sender_window_bufer, LAR+1);
 
                             double now_millisecs = get_time_in_millisecs();
-                            double wait_time_millisecs = 50 - now_millisecs - to_wait->send-time;
+                            double wait_time_millisecs = 50 - now_millisecs - to_wait->send_time;
 
                             struct timeval tv;
                             tv.tv_sec = 0;
@@ -206,8 +224,19 @@ int main(int argc, char *argv[]) {
                                         printf(" Error: %d bytes of ACK received\n", ack_bytes);
                                     }
 
-                                    // Slide the LAR window forward:
-                                    LAR += 1;                                    
+                                    // Log
+                                    // Todo : add time
+                                    fprintf(fd_log, "<Receive> <%d> <%d> <%d> <%d> %s\n", received_ack->seq_num, received_ack->rev_win_size, LAR, LFS);
+
+                                    // Check if the received ack matches the seq num of LAR+1:
+                                    if(received_ack->seq_num = to_wait->seq_num){
+                                            // Slide the LAR window forward:
+                                            LAR += 1;   
+                                    }
+
+                                    // Set the value of receivers free window size:
+                                    recv_free_win_size = received_ack->rev_win_size;
+                                                                         
                             }   
                              else{
                                     printf("No ACK received. Need to resend data\n");
@@ -219,8 +248,13 @@ int main(int argc, char *argv[]) {
                                           if(resend <= 0){
                                             printf("Error resending data!!!\n");
                                           }
-                                    }
-
+                                        // Log
+                                        if (recv_free_win_size >0){
+                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
+                                         }else
+                                        {
+                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f> %s\n", to_send->seq_num, LAR, LFS, to_send->send_time);
+                                        }                          
                             }
 
                     }
@@ -228,7 +262,9 @@ int main(int argc, char *argv[]) {
 
             }
 
-
+            fclose(fd_log);
+            fclose(fd);
+            
 	// while (within sender window size)
 		// send packets
 
