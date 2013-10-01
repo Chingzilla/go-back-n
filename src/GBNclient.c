@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
          GBNPacket to_send, to_wait;
          to_send= rbw_get_packet_n(sender_window_bufer,0);
 
-         printf("%d\n", to_wait->seq_num);
+         printf("%d\n", to_send->seq_num);
 
 
                 // Initialize variables for select:

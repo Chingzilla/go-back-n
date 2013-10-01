@@ -20,7 +20,13 @@ GBNclient: GBNclient.c ${libs}
 GBNserver: GBNserver.c ${libs}
 	${CC} ${CFLAGS} -o GBNserver GBNserver.c ${libs}
 
+tmp/file_in:
+	dd if=/dev/urandom of=tmp/file_in bs=1024 count=100
+
 test_server: GBNserver
 	./GBNserver 5000 0.0 42 tmp/file_out tmp/server_log
 
-.PHONY: all clean test test_server
+test_client: GBNclient tmp/file_in
+	./GBNclient 127.0.0.1 5000 0.0 42 tmp/file_in tmp/client_log
+
+.PHONY: all clean test test_server test_client
