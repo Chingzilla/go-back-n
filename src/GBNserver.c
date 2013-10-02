@@ -102,8 +102,7 @@ int main(int argc, char *argv[]) {
 
     while(1){
         // Get packet
-        
-        get_packet(tmp_packet, sock, &clientAddr);
+        get_packet(tmp_packet, sock, clientAddr);
 
         logevent("Receive", tmp_packet->seq_num, -1, lf_read, 0, rws);
 
