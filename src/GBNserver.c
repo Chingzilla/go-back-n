@@ -100,9 +100,11 @@ int main(int argc, char *argv[]) {
     GBNAck ack;
     ack = malloc(sizeof(GBNAckObj));
 
+    int addr_len;
+
     while(1){
         // Get packet
-        get_packet(tmp_packet, sock, clientAddr);
+        get_packet(tmp_packet, sock, &clientAddr, &addr_len);
 
         logevent("Receive", tmp_packet->seq_num, -1, lf_read, 0, rws);
 

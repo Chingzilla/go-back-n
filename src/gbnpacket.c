@@ -32,7 +32,7 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
 }
 
 
-int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in from){
+int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in *from, int *addr_len){
     int bytes_rcvd;
     char buffer[PACKETSIZE];
     unsigned int from_len;
