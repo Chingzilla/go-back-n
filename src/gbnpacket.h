@@ -17,6 +17,8 @@
 #include "sendto_.h"
 
 #define MAXDATASIZE 1024
+#define PHEADERSIZE 2
+#define PACKETSIZE MAXDATASIZE + PHEADERSIZE
 
 typedef struct{   
     char data[MAXDATASIZE];   // data

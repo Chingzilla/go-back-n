@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
             fd_log = fopen(argv[6],"w");
 
          // TODO: change the loop to loop throughtout the length of data packets
-           while(LFS < num_packets)
+           while(LFS < num_packets){
                         // Check to see if receiver advertised its free window size:
                         if(recv_free_win_size > 0){
                             SWS = recv_free_win_size;
@@ -205,6 +205,7 @@ int main(int argc, char *argv[]) {
                                 // Get the next packet to send:
                                 to_send = rbw_get_next_packet(sender_window_bufer, to_send);
                             }
+                        }
 
                         // Wait for Ack on LAR+1 from the server:
                             to_wait = rbw_get_packet_n(sender_window_bufer, LAR+1);
@@ -260,8 +261,6 @@ int main(int argc, char *argv[]) {
                             }
 
                     }
-
-
             }
 
             fclose(fd_log);

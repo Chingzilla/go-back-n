@@ -12,17 +12,16 @@ double get_time_in_millisecs(){
 
 int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
     int bytes_sent;
-    int size_header = 4+1; // +1 for the null terminator
-    int total_buf_size = size_header + MAXDATASIZE; // the null terminator is already accounted for in size_header
-    char buffer[total_buf_size]; 
+    char buffer[PACKETSIZE]; 
 
-    // Convert seq num from int to char
-    snprintf(buffer,size_header,  "%d",self->seq_num);
+    // Convert to network byte order
+    uint16_t n_seq_num = htons(self->seq_num);
+    memcpy(buffer, (char *)&n_seq_num, 2);
     // Copy data from packet to buffer
-    memcpy(buffer+4, self->data, MAXDATASIZE);
+    memcpy(buffer+PHEADERSIZE, self->data, MAXDATASIZE);
 
     // Send the packet to the server
-    bytes_sent= sendto_(socket_handler,buffer, MAXDATASIZE, 0, (struct sockaddr *) &sendto, sizeof(sendto));
+    bytes_sent= sendto_(socket_handler,buffer, PACKETSIZE, 0, (struct sockaddr *) &sendto, sizeof(sendto));
     // If  packet sent
     if(bytes_sent >0)
     { 
@@ -35,19 +34,18 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
 
 int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in from){
     int bytes_rcvd;
-    int MAXBUFSIZE = 1024 + 5; // data + header
-    char buffer[MAXBUFSIZE];
-    char header[5];
+    char buffer[PACKETSIZE];
     unsigned int from_len;
 
-    bytes_rcvd = recvfrom(socket_handler, buffer, MAXBUFSIZE , 0, (struct sockaddr*) &from, &from_len);
+    bytes_rcvd = recvfrom(socket_handler, buffer, PACKETSIZE , 0, (struct sockaddr*) &from, &from_len);
     if (bytes_rcvd > 0){
-        // copy the sequence number to the packet = first 4 bytes
-        memcpy(header, buffer , 4);
-        self->seq_num = atoi(header);
-
+        uint16_t n_seq_num = *((uint16_t*)buffer);
+        self->seq_num = ntohs(n_seq_num);
+        
          // copy the received data to the packet
-        memcpy(self->data, buffer+4, MAXDATASIZE);
+        memcpy(self->data, buffer+PHEADERSIZE, MAXDATASIZE);
+
+        self->size = bytes_rcvd - PHEADERSIZE;
 
         //set the received flag on
         self->recvd =1;
