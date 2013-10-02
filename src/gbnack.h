@@ -15,6 +15,8 @@
 #include <string.h>
 #include "sendto_.h"
 
+#define MAXACKSIZE 4
+
 typedef struct {
     int seq_num;              // Sequence number
     int rev_win_size;         // Size of the receiver's window
