@@ -28,7 +28,7 @@ typedef struct {
 
 // Function to send ack struct
 // Return value -> number of bytes sent to the remote addr defined by struct sockaddr sento
-int send_ack(GBNAck self, int socket_handler, struct sockaddr_in sendto);
+int send_ack(GBNAck self, int socket_handler, struct sockaddr_in sendto, int addr_len);
 
 // Function to get ack 
 // Return value -> number of bytes received

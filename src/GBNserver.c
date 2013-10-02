@@ -100,11 +100,17 @@ int main(int argc, char *argv[]) {
     GBNAck ack;
     ack = malloc(sizeof(GBNAckObj));
 
+    int rval;
     int addr_len;
 
     while(1){
         // Get packet
+        //bzero(&clientAddr, sizeof(clientAddr));
+        addr_len = sizeof(clientAddr);
         get_packet(tmp_packet, sock, &clientAddr, &addr_len);
+        printf("Client %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
+        printf("addr_len: %d\n", addr_len);
+        printf("Got Packet seq: %d size: %d\n", tmp_packet->seq_num, tmp_packet->size);
 
         logevent("Receive", tmp_packet->seq_num, -1, lf_read, 0, rws);
 
@@ -114,9 +120,7 @@ int main(int argc, char *argv[]) {
             rbw_get_ack_n(recv_win, 0, ack);
             //TODO calculate free slots
             logevent("Resend", ack->seq_num, 999, lf_read, 0, rws);
-            send_ack(ack, sock, clientAddr);
-
-            continue;
+            send_ack(ack, sock, clientAddr, addr_len);
         }
 
         // Put packet into buffer
@@ -154,13 +158,14 @@ int main(int argc, char *argv[]) {
         rbw_get_ack_n(recv_win, 0, ack);
         //TODO calculate free slots
         logevent("Send", ack->seq_num, 999, lf_read, 0, rws);
-        send_ack(ack, sock, clientAddr);
+        send_ack(ack, sock, clientAddr, addr_len);
 
         // Write data to file
         GBNPacket packet_to_read;
         while(lf_read < 0){
             packet_to_read = rbw_get_packet_n(recv_win, lf_read);
             fwrite(packet_to_read->data, 1, packet_to_read->size, outf);
+            printf("Writing Packet seq: %d size: %d\n", packet_to_read->seq_num, packet_to_read->size);
             rws++; // RWS is now bigger
             lf_read++;
         }
