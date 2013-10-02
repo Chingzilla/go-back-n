@@ -32,12 +32,12 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
 }
 
 
-int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in from){
+int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in *from){
     int bytes_rcvd;
     char buffer[PACKETSIZE];
-    unsigned int from_len;
+    int *sender_len;
 
-    bytes_rcvd = recvfrom(socket_handler, buffer, PACKETSIZE , 0, (struct sockaddr*) &from, &from_len);
+    bytes_rcvd = recvfrom(socket_handler, buffer, PACKETSIZE , 0, (struct sockaddr*) from, sender_len);
     if (bytes_rcvd > 0){
         uint16_t n_seq_num = *((uint16_t*)buffer);
         self->seq_num = ntohs(n_seq_num);

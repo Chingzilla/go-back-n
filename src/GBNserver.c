@@ -100,15 +100,10 @@ int main(int argc, char *argv[]) {
     GBNAck ack;
     ack = malloc(sizeof(GBNAckObj));
 
-    int rval;
-
     while(1){
         // Get packet
-        rval = get_packet(tmp_packet, sock, clientAddr);
-        if(rval != 0){
-            printf("Error reading packet\n");
-            continue;
-        }
+        
+        get_packet(tmp_packet, sock, &clientAddr);
 
         logevent("Receive", tmp_packet->seq_num, -1, lf_read, 0, rws);
 
@@ -119,6 +114,8 @@ int main(int argc, char *argv[]) {
             //TODO calculate free slots
             logevent("Resend", ack->seq_num, 999, lf_read, 0, rws);
             send_ack(ack, sock, clientAddr);
+
+            continue;
         }
 
         // Put packet into buffer

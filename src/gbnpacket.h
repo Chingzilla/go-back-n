@@ -39,7 +39,7 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto);
 
 // Function to get packet struct
 // Return value -> number of bytes received
-int get_packet (GBNPacket self, int socket_handler, struct sockaddr_in from);
+int get_packet (GBNPacket self, int socket_handler, struct sockaddr_in *from);
 
 // Copies data from other
 int gbnp_copy(GBNPacket self, GBNPacket other);
