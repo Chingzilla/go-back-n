@@ -20,13 +20,16 @@
 FILE *logfile;
 
 int logevent(char *event, int seq_num, int free_slots, int lfread, int lfrcvd, int lfa){
+    char strbuf[100];
     if(free_slots >= 0){
-        fprintf(logfile, "%s: <%s> <seq:%d> [free:%d] <LFRead:%d> <LFRcvd:%d> <LAF:%d>\n",
+        sprintf(strbuf, "%s: <%s> <seq:%d> [free:%d] <LFRead:%d> <LFRcvd:%d> <LAF:%d>\n",
           "TODOTIME", event, seq_num, free_slots, lfread, lfrcvd, lfa);
     } else {
-        fprintf(logfile, "%s: <%s> <seq:%d> <LFRead:%d> <LFRcvd:%d> <LAF:%d>\n",
+        sprintf(strbuf, "%s: <%s> <seq:%d> <LFRead:%d> <LFRcvd:%d> <LAF:%d>\n",
           "TODOTIME", event, seq_num, lfread, lfrcvd, lfa);
     }
+    printf(strbuf);
+    fprintf(logfile, strbuf);
     fflush(logfile);
     return 0;
 }
@@ -91,16 +94,18 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    int lf_read = -1;
+    int lf_read = 0;
     int rws = 6;
-    
+    int laf = rws - 1;
+    int free_space = rws;
+
     GBNPacket tmp_packet;
     tmp_packet = malloc(sizeof(GBNPacketObj));
+    int tmp_packet_n = 0;
 
     GBNAck ack;
     ack = malloc(sizeof(GBNAckObj));
 
-    int rval;
     int addr_len;
 
     while(1){
@@ -108,38 +113,43 @@ int main(int argc, char *argv[]) {
         //bzero(&clientAddr, sizeof(clientAddr));
         addr_len = sizeof(clientAddr);
         get_packet(tmp_packet, sock, &clientAddr, &addr_len);
-        printf("Client %s:%d\n", inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
-        printf("addr_len: %d\n", addr_len);
-        printf("Got Packet seq: %d size: %d\n", tmp_packet->seq_num, tmp_packet->size);
+        printf("Got Packet seq: %d size: %d client:%s:%d\n", tmp_packet->seq_num, tmp_packet->size,
+          inet_ntoa(clientAddr.sin_addr), ntohs(clientAddr.sin_port));
 
         logevent("Receive", tmp_packet->seq_num, -1, lf_read, 0, rws);
 
         // Check if packet is in window
-        if( rbw_get_n(recv_win, tmp_packet) < 0){
+        tmp_packet_n = rbw_get_n(recv_win, tmp_packet);
+        if( tmp_packet_n < 0){
             // packet behind window, sending current ack
             rbw_get_ack_n(recv_win, 0, ack);
-            //TODO calculate free slots
-            logevent("Resend", ack->seq_num, 999, lf_read, 0, rws);
+
+            logevent("Resend", ack->seq_num, free_space, lf_read, 0, rws);
             send_ack(ack, sock, clientAddr, addr_len);
+            continue;
+        }else if(tmp_packet_n >= rws){
+            printf("Packet %d is out of window, dropping\n", tmp_packet->seq_num);
+            continue;
         }
 
-        // Put packet into buffer
-        rbw_put_packet(recv_win, tmp_packet);
+        // Put packet into buffer and check if packet was new
+        if(rbw_put_packet(recv_win, tmp_packet) == 0){
+            free_space -= 1;
+        }
 
         // Check if we can ack
         GBNPacket next_packet = rbw_get_packet_n(recv_win, 0);
-        int i = 0;
-        while(1){
+        int i;
+        for(i=0; i < rws; ++i){
             // Check if packet has been received
             if(next_packet->recvd != 1){
                 break;
             }
-                
-            i++;
 
             // Get next packet and check if it in NULL (out of window)
             next_packet = rbw_get_next_packet(recv_win, next_packet);
             if (next_packet == NULL){
+                printf("Warning: reached end of window unexpectedly\n");
                 break;
             }
         }
@@ -152,12 +162,12 @@ int main(int argc, char *argv[]) {
         // Slide window and ack
         lf_read -= i;
         rws -= i;
+        free_space += i;
         rbw_inc_head(recv_win, i);
         rbw_set_win_size(recv_win, rws);
 
-        rbw_get_ack_n(recv_win, 0, ack);
-        //TODO calculate free slots
-        logevent("Send", ack->seq_num, 999, lf_read, 0, rws);
+        rbw_get_ack_n(recv_win, -1, ack);
+        logevent("Send", ack->seq_num, free_space, lf_read, 0, rws);
         send_ack(ack, sock, clientAddr, addr_len);
 
         // Write data to file
@@ -169,7 +179,7 @@ int main(int argc, char *argv[]) {
             rws++; // RWS is now bigger
             lf_read++;
         }
-        lf_read = -1; // reset LFRead
+        //lf_read = -1; // reset LFRead
 
         // Exit if size is < max size
         // TODO detect end of file

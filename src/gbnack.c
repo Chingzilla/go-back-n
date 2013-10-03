@@ -9,7 +9,7 @@ int send_ack(GBNAck self, int socket_handler, struct sockaddr_in sendto, int add
     n_seq_num = htons(self->seq_num);
     n_rev_win_size = htons(self->rev_win_size);
 
-    printf("Send ack %4d:%d\n", self->seq_num, self->rev_win_size);
+    //printf("Send ack %4d:%d\n", self->seq_num, self->rev_win_size);
 
     // Copy seq_num and rev_win_size to buffer
     memcpy(buffer, (char*)&n_seq_num, 2);

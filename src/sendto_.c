@@ -22,5 +22,6 @@ int sendto_(int sock, void* message, int length, int flags, struct sockaddr* sa,
 	if (rnd > p_threshold) {
 		return sendto(sock, message, length, flags, sa, dest_len);
 	}
+    printf("Packet 'failed' to send\n");
 	return length;
 }
