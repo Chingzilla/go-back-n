@@ -159,17 +159,22 @@ long int size;
             int recv_free_win_size = -1;
 
             int j=0;
+
             int resend;
 
             FD_ZERO(&rfds);
             FD_SET(sd, &rfds);
 
+            GBNAck received_ack;
+            received_ack = (GBNAck) malloc(sizeof(GBNAckObj));
+            
+            int ack_bytes;
+           
             // Open log file:
             FILE* fd_log;
             fd_log = fopen(argv[6],"w");
 
-         // TODO: change the loop to loop throughtout the length of data packets
-           while(LFS < num_packets){
+           while(LAR != num_packets ){
                         // Check to see if receiver advertised its free window size:
                         if(recv_free_win_size > 0){
                             SWS = recv_free_win_size;
@@ -211,18 +216,16 @@ long int size;
                             to_wait = rbw_get_packet_n(sender_window_bufer, LAR+1);
 
                             double now_millisecs = get_time_in_millisecs();
-                            double wait_time_millisecs = 50 - now_millisecs - to_wait->send_time;
+                            double wait_time_millisecs = to_wait->send_time + 50 - now_millisecs;
+                            printf ("%f\n",wait_time_millisecs);
 
                             struct timeval tv;
                             tv.tv_sec = 0;
                             tv.tv_usec = wait_time_millisecs * 1000;
 
-                            ret_select = select(1, &rfds, NULL, NULL, &tv);
+                            ret_select = select(sd+1, &rfds, NULL, NULL, &tv);
                             if(FD_ISSET(sd, &rfds) == 1){
                                     printf("ACK available now\n");
-                                    GBNAck received_ack;
-                                    received_ack = (GBNAck) malloc(sizeof(GBNAckObj));
-                                    int ack_bytes;
                                     ack_bytes = get_ack(received_ack, sd, remoteServAddr);
                                     if(ack_bytes <= 0){
                                         printf(" Error: %d bytes of ACK received\n", ack_bytes);
@@ -240,7 +243,8 @@ long int size;
 
                                     // Set the value of receivers free window size:
                                     recv_free_win_size = received_ack->rev_win_size;
-                                                                         
+                                      // Reset ack_bytes:
+                                     ack_bytes = 0;          
                             }
                              else{
                                     printf("No ACK received. Need to resend data\n");
