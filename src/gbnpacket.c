@@ -1,15 +1,5 @@
 #include "gbnpacket.h"
 
-double get_time_in_millisecs(){
-    struct timeval now;
-    double time_in_mill;
-
-     // Get the current time in milliseconds
-    gettimeofday(&now, NULL);
-    time_in_mill = (now.tv_sec)*1000 + (now.tv_usec)/1000;
-    return time_in_mill;
-}
-
 int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
     int bytes_sent;
     char buffer[PACKETSIZE]; 
@@ -26,8 +16,9 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
     if(bytes_sent >0)
     { 
            // Set the send_time of the packet
-           self->send_time = get_time_in_millisecs();
+           gettimeofday(&(self->send_time), NULL);
     }
+    self->recvd = 1;
     return bytes_sent;
 }
 
@@ -63,5 +54,6 @@ int gbnp_copy(GBNPacket self, GBNPacket other){
 
 void clear(GBNPacket self){
 	self->recvd = 0;
-	self->send_time = 0;
+	self->send_time.tv_sec = 0;
+    self->send_time.tv_usec = 0;
 }

@@ -26,7 +26,7 @@ typedef struct{
     int seq_num;              // sequence number   
     
     int recvd;                         // packet recvd flag (returns 1->true, 0->false)
-    double send_time;            // timer value
+    struct timeval send_time;            // timer value
 } GBNPacketObj,*GBNPacket;
 
 //**********************************************
