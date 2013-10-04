@@ -64,7 +64,7 @@ int rbw_get_ack_n(RingBufferWindow self, int n, GBNAck ack){
     ack->seq_num = packet_n->seq_num;
     ack->rev_win_size = self->win_size;
 
-    if ( n < 0 || n >= self->win_size ){
+    if ( n < -1 || n >= self->win_size ){
         fprintf(stderr, "Requested ack is outsize window\n");
         return 1;
     }
@@ -125,6 +125,9 @@ int rbw_set_win_size(RingBufferWindow self, int size){
 
 int rbw_put_packet(RingBufferWindow self, GBNPacket packet){
     GBNPacket my_packet = self->buffer[packet->seq_num];
+    if(my_packet->recvd){
+        return 1;
+    }
     gbnp_copy(my_packet, packet);
     //set packet as recvd
     my_packet->recvd = 1;

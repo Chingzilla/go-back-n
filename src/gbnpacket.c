@@ -37,7 +37,6 @@ int get_packet (GBNPacket self,int socket_handler, struct sockaddr_in *from, int
     char buffer[PACKETSIZE];
 
     bytes_rcvd = recvfrom(socket_handler, buffer, PACKETSIZE , 0, (struct sockaddr*)from, addr_len);
-    printf("Received %s\n", inet_ntoa(from->sin_addr));
     if (bytes_rcvd > 0){
         uint16_t n_seq_num = *((uint16_t*)buffer);
         self->seq_num = ntohs(n_seq_num);
