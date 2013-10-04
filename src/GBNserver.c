@@ -17,16 +17,23 @@
 #include <fcntl.h>
 #include "ringbufferwindow.h"
 
+#include <time.h>
+
 FILE *logfile;
 
 int logevent(char *event, int seq_num, int free_slots, int lfread, int lfrcvd, int lfa){
+
+    time_t current_time = time(NULL);
+    char *strtime = ctime(&current_time);
+    strtime[strlen(strtime) - 1] = '\0';
     char strbuf[100];
+    
     if(free_slots >= 0){
         sprintf(strbuf, "%s: <%s> <seq:%d> [free:%d] <LFRead:%d> <LFRcvd:%d> <LAF:%d>\n",
-          "TODOTIME", event, seq_num, free_slots, lfread, lfrcvd, lfa);
+          strtime, event, seq_num, free_slots, lfread, lfrcvd, lfa);
     } else {
         sprintf(strbuf, "%s: <%s> <seq:%d> <LFRead:%d> <LFRcvd:%d> <LAF:%d>\n",
-          "TODOTIME", event, seq_num, lfread, lfrcvd, lfa);
+          strtime, event, seq_num, lfread, lfrcvd, lfa);
     }
     printf(strbuf);
     fprintf(logfile, strbuf);
@@ -174,8 +181,8 @@ int main(int argc, char *argv[]) {
         GBNPacket packet_to_read;
         while(lf_read < 0){
             packet_to_read = rbw_get_packet_n(recv_win, lf_read);
-            fwrite(packet_to_read->data, 1, packet_to_read->size, outf);
             printf("Writing Packet seq: %d size: %d\n", packet_to_read->seq_num, packet_to_read->size);
+            fwrite(packet_to_read->data, 1, packet_to_read->size, outf);
             rws++; // RWS is now bigger
             lf_read++;
         }
