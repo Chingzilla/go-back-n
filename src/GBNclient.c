@@ -133,7 +133,14 @@ int main(int argc, char *argv[]) {
 
     rbw_init(&win_buff, sws);
 
+    GBNAck lar = malloc(sizeof(GBNAckObj));
+    bzero(lar, sizeof(GBNAckObj));
     GBNPacket tmp_packet;
+
+    // Timeout stuff
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(sd, &rfds);
 
     // Fill window with data from file
     for(int i=0; i < sws; i++){
@@ -151,8 +158,19 @@ int main(int argc, char *argv[]) {
         // Send Packets in window
         for(int i=0; i < sws; i++){
             tmp_packet = rbw_get_packet_n(win_buff, i);
+            if(tmp_packet->recvd){
+                continue;
+            }
+            
+            // Check if packet has been sent before
+            char *strevent;
+            if(tmp_packet->send_time.tv_sec){
+                strevent = "Resend";
+            }else{
+                strevent = "Send";
+            }
             send_packet(tmp_packet, sd, remoteServAddr);
-            logevent("Send", tmp_packet->seq_num, -1, -1, lfs);
+            logevent(strevent, tmp_packet->seq_num, -1, -1, lfs);
             lfs = i;
         }
 
@@ -160,6 +178,20 @@ int main(int argc, char *argv[]) {
         struct timeval time_out;
         tmp_packet = rbw_get_packet_n(win_buff, 0);
         get_timeout(tmp_packet->send_time, &time_out);
+
+        select(sd, &rfds, NULL, NULL, &time_out);
+
+        if(FD_ISSET(sd, &rfds) != 0){
+            int lar_cache = lar->seq_num;
+            get_ack(lar, sd, remoteServAddr);
+            logevent("Receive", lar->seq_num, 999, lar_cache, lfs);
+
+            //TODO: Update window and buffer
+        }else{
+            for(int i=0; i < sws; i++){
+                rbw_get_packet_n(win_buff, i)->recvd = 0;
+            }
+        }
         
 
         // Update ringbuffer (window and head)
