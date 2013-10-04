@@ -48,7 +48,14 @@ int main(int argc, char *argv[]) {
     remoteServAddr.sin_addr.s_addr = inet_addr(argv[1]); //sets remote IP address
     printf("%s: sending data to '%s:%s' \n", argv[0], argv[1], argv[2]);
 
+    FILE *fd = fopen(argv[5], "rb");
+
     // Get file size
+    fseek(fd, 0, SEEK_END);
+    int file_size = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
+    
+    printf("File %s is %d bytes long\n", argv[5], file_size);
     
     // Setup ringbuffer
     //   fill window with file data
