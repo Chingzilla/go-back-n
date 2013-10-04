@@ -17,6 +17,7 @@ clean:
 	rm -f ${libs}
 	rm -f GBNclient
 	rm -f GBNserver
+	rm -f tmp/{file_out,server_log,client_log}
 
 GBNclient: GBNclient.c ${libs}
 	${CC} ${CFLAGS} -o GBNclient GBNclient.c ${libs}

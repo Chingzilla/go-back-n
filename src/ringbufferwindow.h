@@ -58,6 +58,9 @@ int rbw_put_packet(RingBufferWindow self, GBNPacket packet);
 // Returns relitive posiotion of packet relitive to head
 int rbw_get_n(RingBufferWindow self, GBNPacket packet);
 
+// Returns relitive posiotion of packet relitive to head
+int rbw_get_n_ack(RingBufferWindow self, GBNAck ack);
+
 // Returns next packet in window, returns NULL if at the end of window
 GBNPacket rbw_get_next_in_window(RingBufferWindow self, GBNPacket);
 

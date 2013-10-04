@@ -156,4 +156,16 @@ int rbw_get_n(RingBufferWindow self, GBNPacket packet){
     return diff;
 }
 
+int rbw_get_n_ack(RingBufferWindow self, GBNAck ack){
+    int diff = ack->seq_num - self->win_head;
+
+    // Normalize value, diff can not be larger or less then BUFFSIZE / 2
+    if(diff < -(BUFFSIZE / 2))
+        diff += BUFFSIZE;
+    else if(diff > (BUFFSIZE /2))
+        diff -= BUFFSIZE;
+
+    return diff;
+    
+}
 /*** end of RingBufferWindow class ***/

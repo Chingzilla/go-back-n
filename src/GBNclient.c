@@ -139,8 +139,6 @@ int main(int argc, char *argv[]) {
 
     // Timeout stuff
     fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(sd, &rfds);
 
     // Fill window with data from file
     for(int i=0; i < sws; i++){
@@ -179,22 +177,31 @@ int main(int argc, char *argv[]) {
         tmp_packet = rbw_get_packet_n(win_buff, 0);
         get_timeout(tmp_packet->send_time, &time_out);
 
-        select(sd, &rfds, NULL, NULL, &time_out);
+        FD_ZERO(&rfds);
+        FD_SET(sd, &rfds);
+        select(sd+1, &rfds, NULL, NULL, &time_out);
 
         if(FD_ISSET(sd, &rfds) != 0){
             int lar_cache = lar->seq_num;
             get_ack(lar, sd, remoteServAddr);
-            logevent("Receive", lar->seq_num, 999, lar_cache, lfs);
+            logevent("Receive", lar->seq_num, lar->rev_win_size, lar_cache, lfs);
+            sws = lar->rev_win_size;
 
             //TODO: Update window and buffer
+            int ack_n = rbw_get_n_ack(win_buff, lar);
+            if(ack_n < 0){
+                printf("ack is behind the current LAR, ignoring\n");
+                continue;
+            }
+            //TODO read more packets from file
+            
+            rbw_inc_head(win_buff, ack_n + 1); // Move head to LAR + 1
+            rbw_set_win_size(win_buff, lar->rev_win_size);
         }else{
             for(int i=0; i < sws; i++){
                 rbw_get_packet_n(win_buff, i)->recvd = 0;
             }
         }
-        
-
-        // Update ringbuffer (window and head)
     }
     fclose(logfile);
     fclose(fd);
