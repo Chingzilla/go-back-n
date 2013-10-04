@@ -52,6 +52,26 @@ int file_to_packet(FILE *fin, GBNPacket packet){
     return nbytes;
 }
 
+#define TIMEOUT 500 // TODO: change to 50
+int get_timeout(struct timeval start, struct timeval *timeout){
+    struct timeval current;
+    gettimeofday(&current, NULL);
+
+    double diff;
+
+    diff = (current.tv_sec - start.tv_sec) * 1000 + ( current.tv_usec - start.tv_usec);
+
+    if( diff > TIMEOUT ){
+        timeout->tv_sec = 0;
+        timeout->tv_usec = 0;
+    }else{
+        timeout->tv_sec = 0;
+        timeout->tv_usec = (long)(TIMEOUT - diff);
+    }
+    printf("Timeout: %d\n", timeout->tv_usec);
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     
     /* check command line args. */
@@ -133,9 +153,14 @@ int main(int argc, char *argv[]) {
             tmp_packet = rbw_get_packet_n(win_buff, i);
             send_packet(tmp_packet, sd, remoteServAddr);
             logevent("Send", tmp_packet->seq_num, -1, -1, lfs);
+            lfs = i;
         }
 
         // Check for ack loop timeout
+        struct timeval time_out;
+        tmp_packet = rbw_get_packet_n(win_buff, 0);
+        get_timeout(tmp_packet->send_time, &time_out);
+        
 
         // Update ringbuffer (window and head)
     }
