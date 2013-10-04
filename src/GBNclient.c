@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
             
             // Initialize sender window buffer, LAR, LFS:
             RingBufferWindow sender_window_bufer;
-           int SWS = 6;
+           int SWS = 9;
    	int LAR = -1;
    	int LFS = -1;
 
