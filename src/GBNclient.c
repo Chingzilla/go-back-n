@@ -23,11 +23,11 @@
 int main(int argc, char *argv[]) {
     
 /* check command line args. */
-// if(argc<7)
-// {
-// printf("usage : %s <server_ip> <server_port> <error rate> <random seed> <send_file> <send_log> \n", argv[0]);
-// exit(1);
-// }
+if(argc<7)
+{
+printf("usage : %s <server_ip> <server_port> <error rate> <random seed> <send_file> <send_log> \n", argv[0]);
+exit(1);
+}
 
 /* Note: you must initialize the network library first before calling sendto_(). The arguments are the <errorrate> and <random seed> */
 init_net_lib(atof(argv[3]), atoi(argv[4]));
@@ -71,7 +71,7 @@ long int size;
             }
             else{
                 num_packets = (int) size/(MAXDATASIZE) +1;
-            }	
+            }   
 
             // Create packetObj array in stack:
             GBNPacketObj data_packets[num_packets];
@@ -79,8 +79,6 @@ long int size;
             size_t retVal;
             for (i =0; i<num_packets;i++){
                 if(i < num_packets-1){
-                    // printf("Packet %d\n", i);
-                        // Read the data
                         retVal = fread(data_packets[i].data, sizeof(char), MAXDATASIZE, fd);
                         // Set the size
                        // data_packets[i].data[MAXDATASIZE]='\0';
@@ -93,7 +91,6 @@ long int size;
                 }
                 else{
                         // Last packet case:
-                    //printf("Last packet \n");
                        size_t leftBytes = (int) size % MAXDATASIZE;
                         retVal = fread(data_packets[i].data, sizeof(char),leftBytes, fd);
                         //data_packets[i].data[leftBytes+1]='\0';
@@ -111,7 +108,7 @@ long int size;
             
             // Initialize sender window buffer, LAR, LFS:
     RingBufferWindow sender_window_bufer;
-    int SWS = 6;
+    int SWS = 9;
     int LAR = -1;
     int LFS = -1;
 
@@ -123,20 +120,14 @@ long int size;
 
      // Copy all the packets to the sender window buffer:
      for (i =0; i < num_packets; i++){
-                        //printf("%d\n", i);
          if(rbw_put_packet(sender_window_bufer, &data_packets[i]) != 0){
                      fprintf(stderr, "Error putting packet into ringbuffer\n");
                       exit(1);
          }
-                        // else{
-                        // printf("Success putting packet %d to the buffer\n",i );
-                        // }
+
         if(rbw_inc_head(sender_window_bufer, 1) !=0){
                 printf("Error increamenting head\n");
         }
-                    // else{
-                    // printf(" Head incremented to %d \n", i+1);
-                    // }
      
      }
 
@@ -246,9 +237,9 @@ long int size;
                                     if(FD_ISSET(sd, &rfds)){
                                         printf("ACK available now\n");
                                         ack_bytes = get_ack(received_ack, sd, remoteServAddr);
-                                        if(ack_bytes <= 0){
-                                            printf(" Error: %d bytes of ACK received\n", ack_bytes);
-                                        }
+                                        // if(ack_bytes <= 0){
+                                        //     printf(" Error: %d bytes of ACK received\n", ack_bytes);
+                                        // }
 
                                         // Log
                                         // Todo : add time
@@ -257,7 +248,7 @@ long int size;
                                         // Check if the received ack matches the seq num of LAR+1:
                                         if(received_ack->seq_num = to_wait->seq_num){
                                                 // Slide the LAR window forward:
-                                                LAR += 1;
+                                                LAR = received_ack->seq_num;
                                         }
 
                                         // Set the value of receivers free window size:
@@ -288,20 +279,6 @@ long int size;
 
             fclose(fd_log);
             fclose(fd);
-
-// while (within sender window size)
-// send packets
-
-
-// select( sd, read, NULL,NULL, &timeval of the LAR +1 packet);
-// if (ack received) and RWS >0
-// slide the window forward
-
-// else if (RWS == 0)
-// handle the corner case
-
-// else data is not received at all until timeout
-// so resend all packets from LAR+1 to LFS.
 
 return 0;
 }
