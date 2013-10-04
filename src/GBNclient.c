@@ -43,6 +43,15 @@ int logevent(char *event, int seq_num, int free_slots, int lar, int lfs){
     return 0;
 }
 
+// Copy data from file and put in packet. Returns number of bytes writen
+int file_to_packet(FILE *fin, GBNPacket packet){
+    int nbytes = fread(packet->data, sizeof(char), MAXDATASIZE, fin);
+    packet->size = nbytes;
+    
+    printf("read %d from file\n", nbytes);
+    return nbytes;
+}
+
 int main(int argc, char *argv[]) {
     
     /* check command line args. */
@@ -87,6 +96,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error opening file %s\n", argv[5]);
         exit(1);
     }
+    int fd_eof = 0;
 
     // Get file size
     fseek(fd, 0, SEEK_END);
@@ -96,8 +106,25 @@ int main(int argc, char *argv[]) {
     printf("File %s is %d bytes long\n", argv[5], file_size);
     
     // Setup ringbuffer
-    // 
-    //   fill window with file data
+    RingBufferWindow win_buff;
+    int sws = 9; // Per assignment
+    int lfs;
+    int free_space = 9;
+
+    rbw_init(&win_buff, sws);
+
+    GBNPacket tmp_packet;
+
+    // Fill window with data from file
+    for(int i=0; i < sws; i++){
+        tmp_packet = rbw_get_packet_n(win_buff, i);
+        file_to_packet(fd, tmp_packet);
+        if( tmp_packet->size < MAXDATASIZE ){
+            fd_eof = 1;
+            sws = i;
+            break;
+        }
+    }
 
     // Send packets
     while(1){
