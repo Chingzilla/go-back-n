@@ -129,6 +129,11 @@ int main(int argc, char *argv[]) {
     // Send packets
     while(1){
         // Send Packets in window
+        for(int i=0; i < sws; i++){
+            tmp_packet = rbw_get_packet_n(win_buff, i);
+            send_packet(tmp_packet, sd, remoteServAddr);
+            logevent("Send", tmp_packet->seq_num, -1, -1, lfs);
+        }
 
         // Check for ack loop timeout
 
