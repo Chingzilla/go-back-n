@@ -18,6 +18,12 @@
 #include "gobackn.h"
 #include "ringbufferwindow.h"
 
+void get_time(char* time_var){
+    time_t current_time = time(NULL);
+    time_var = ctime(&current_time);
+    *(time_var+(strlen(time_var)-1))='\0';
+}
+
 int main(int argc, char *argv[]) {
     
             /* check command line args. */
@@ -109,6 +115,7 @@ int main(int argc, char *argv[]) {
             int SWS = 9;
             int LAR = -1;
             int LFS = -1;
+            int counter = 0;
 
             int init_val = 200;
             if(rbw_init(&sender_window_buffer, init_val) != 0){
@@ -133,7 +140,7 @@ int main(int argc, char *argv[]) {
             sender_window_buffer->win_head = 0;
 
             // Get first packet to send:
-            GBNPacket to_send, to_wait;
+            GBNPacket to_send, to_wait, to_resend;
             to_send= rbw_get_packet_n(sender_window_buffer,0);
 
             // Initialize variables for select:
@@ -147,9 +154,8 @@ int main(int argc, char *argv[]) {
 
             int resend;
             double time_now, wait_time_millisecs;
-
-            FD_ZERO(&rfds);
-            FD_SET(sd, &rfds);
+            char* current_time;
+            current_time =  (char*) malloc(sizeof(char));
 
             GBNAck received_ack;
             received_ack = (GBNAck) malloc(sizeof(GBNAckObj));
@@ -177,18 +183,25 @@ int main(int argc, char *argv[]) {
                                 while((LFS - (LAR+1))< (SWS-1)){
                                     // Send packets
                                     int bytesSent;
-                                    //printf("Inside send loop\n"); 
+                                    //printf("Inside send loop\n");
+                                    printf("Sending packet %d\n",to_send->seq_num);
                                     bytesSent = send_packet(to_send ,sd, remoteServAddr);
                                     if(bytesSent <= 0){
                                          printf("Error sending packet!\n");
                                     }
                                     else{
+                                        get_time(current_time);
+                                        printf("%s",current_time);
+
+                                        // Debugging:
+                                        fprintf(fd_log, "Packet %d sent to server\n",to_send->seq_num);
+
                                         // Log
                                         if (recv_free_win_size >0){
-                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%f> \n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
+                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%d> <%s> \n", to_send->seq_num, recv_free_win_size, LAR, LFS,current_time);
                                         }else
                                         {
-                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%f>\n", to_send->seq_num, LAR, LFS, to_send->send_time);
+                                             fprintf(fd_log, "<Send> <%d> <%d> <%d> <%s>\n", to_send->seq_num, LAR, LFS, current_time);
                                         }
                                        
                                         //Packet sent:
@@ -201,7 +214,7 @@ int main(int argc, char *argv[]) {
                                         }
 
                                         // Get the next packet to send:
-                                        to_send = rbw_get_next_packet(sender_window_buffer, to_send);
+                                        to_send = rbw_get_next_packet(sender_window_buffer,to_send);
                                     }
                                 }
                          }
@@ -242,6 +255,8 @@ int main(int argc, char *argv[]) {
                             tv.tv_sec = 0.0;
                             tv.tv_usec =50*1000;
                            
+                            FD_ZERO(&rfds);
+                            FD_SET(sd, &rfds);
                             ret_select = select(sd+1, &rfds, NULL, NULL, &tv);
 
                             if(ret_select == -1){
@@ -259,7 +274,7 @@ int main(int argc, char *argv[]) {
                                         // Log
                                         // Todo : add time
                                         fprintf(fd_log, "<Receive> <%d> <%d> <%d> <%d>\n", received_ack->seq_num, received_ack->rev_win_size, LAR, LFS);
-
+                                        fprintf(fd_log,"Received ack number is %d %d\n",received_ack->seq_num, received_ack->rev_win_size);
                                         // Check if the received ack is a new one: 
                                         if(received_ack->seq_num > LAR){
                                                 // Slide the LAR window forward:
@@ -275,15 +290,20 @@ int main(int argc, char *argv[]) {
                                       
                                             for (j= LAR+1; j <= LFS; j++){
                                                     // Set the window head to LAR:
-                                                   if(LAR < 0){
-                                                        sender_window_buffer->win_head = 0;
-                                                   }
-                                                   else{
-                                                        sender_window_buffer->win_head = LAR;
-                                                   }
+                                                  // if(LAR < 0){
+                                                  //      sender_window_buffer->win_head = 0;
+                                                  // }
+                                                  // else{
+                                                  //      sender_window_buffer->win_head = LAR;
+                                                  //}
 
+                                                   // Set the window head back to LAR:
+                                                    
+
+
+                                                   fprintf(fd_log,"In resend, the head is at %d\n",sender_window_buffer->win_head);
                                                     // Resend packets
-                                                    to_send = rbw_get_packet_n(sender_window_buffer, j);
+                                                    to_resend= rbw_get_packet_n(sender_window_buffer, j);
                                                     printf("Resending packet %d\n",to_send->seq_num);
                                                     resend = send_packet(to_send ,sd, remoteServAddr);
                                                     if(resend <= 0){
@@ -292,16 +312,12 @@ int main(int argc, char *argv[]) {
                                                    
                                                     // Log
                                                     if (recv_free_win_size >0){
-                                                         fprintf(fd_log, "<Resend> <%d> <%d> <%d> <%d> <%f>\n", to_send->seq_num, recv_free_win_size, LAR, LFS, to_send->send_time);
+                                                         fprintf(fd_log, "<Resend> <%d> <%d> <%d> <%d> <%s>\n", to_send->seq_num, recv_free_win_size, LAR, LFS, current_time);
                                                      }else
                                                     {
-                                                         fprintf(fd_log, "<Resend> <%d> <%d> <%d> <%f>\n", to_send->seq_num, LAR, LFS, to_send->send_time);
+                                                         fprintf(fd_log, "<Resend> <%d> <%d> <%d> <%s>\n", to_send->seq_num, LAR, LFS, current_time);
                                                     }
                                                     
-                                                    // Increment the head of the ring buffer window:
-                                                    if(rbw_inc_head(sender_window_buffer, 1) !=0){
-                                                             printf("Error increamenting head\n");
-                                                    }
                                                     
                                             }
                                     }
