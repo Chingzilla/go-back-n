@@ -16,8 +16,32 @@
 #include <unistd.h>
 #include "sendto_.h"
 
+#include <time.h>
+
 #include "gobackn.h"
 #include "ringbufferwindow.h"
+
+FILE *logfile;
+
+int logevent(char *event, int seq_num, int free_slots, int lar, int lfs){
+
+    time_t current_time = time(NULL);
+    char *strtime = ctime(&current_time);
+    strtime[strlen(strtime) - 1] = '\0';
+    char strbuf[100];
+    
+    if(free_slots >= 0){
+        sprintf(strbuf, "%s: <%s> <seq:%d> [free:%d] <LAR:%d> <LFS:%d>\n",
+          strtime, event, seq_num, free_slots, lar, lfs);
+    } else {
+        sprintf(strbuf, "%s: <%s> <seq:%d> <LAR:%d> <LFS:%d>\n",
+          strtime, event, seq_num, lar, lfs);
+    }
+    printf(strbuf);
+    fprintf(logfile, strbuf);
+    fflush(logfile);
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
     
@@ -48,7 +72,21 @@ int main(int argc, char *argv[]) {
     remoteServAddr.sin_addr.s_addr = inet_addr(argv[1]); //sets remote IP address
     printf("%s: sending data to '%s:%s' \n", argv[0], argv[1], argv[2]);
 
+    // Open logfile
+    logfile = fopen(argv[6], "a");
+        if (logfile == NULL){
+            fprintf(stderr, "Error opening logfile: %s\n", argv[6]);
+            exit(1);
+        }
+    fprintf(logfile, "*** Starting Server ***\n");
+    fflush(logfile);
+
+    // Open file to send
     FILE *fd = fopen(argv[5], "rb");
+    if (fd == NULL){
+        fprintf(stderr, "Error opening file %s\n", argv[5]);
+        exit(1);
+    }
 
     // Get file size
     fseek(fd, 0, SEEK_END);
@@ -58,6 +96,7 @@ int main(int argc, char *argv[]) {
     printf("File %s is %d bytes long\n", argv[5], file_size);
     
     // Setup ringbuffer
+    // 
     //   fill window with file data
 
     // Send packets
@@ -68,4 +107,6 @@ int main(int argc, char *argv[]) {
 
         // Update ringbuffer (window and head)
     }
+    fclose(logfile);
+    fclose(fd);
 }
