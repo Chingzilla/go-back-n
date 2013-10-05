@@ -138,6 +138,7 @@ int rbw_put_packet(RingBufferWindow self, GBNPacket packet){
 // Returns next packet in window, returns NULL if at the end of window
 GBNPacket rbw_get_next_in_window(RingBufferWindow self, GBNPacket curr_packet){
     int next_n = get_seq_diff(self->win_head, curr_packet->seq_num);
+    next_n++;
     if( next_n < 0 || next_n >= self->win_size){
         return NULL;
     }
