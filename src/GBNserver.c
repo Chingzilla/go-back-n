@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
         tmp_packet_n = rbw_get_n(recv_win, tmp_packet);
         if( tmp_packet_n < 0){
             // packet behind window, sending current ack
-            rbw_get_ack_n(recv_win, 0, ack);
+            rbw_get_ack_n(recv_win, -1, ack);
 
             logevent("Resend", ack->seq_num, free_space, lf_read, 0, rws);
             send_ack(ack, sock, clientAddr, addr_len);

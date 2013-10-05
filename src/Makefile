@@ -17,7 +17,7 @@ clean:
 	rm -f ${libs}
 	rm -f GBNclient
 	rm -f GBNserver
-	rm -f tmp/{file_out,server_log,client_log}
+	rm -f tmp/{file_out,server_log,client_log,server_stdout,client_stdout}
 
 GBNclient: GBNclient.c ${libs}
 	${CC} ${CFLAGS} -o GBNclient GBNclient.c ${libs}
@@ -26,13 +26,13 @@ GBNserver: GBNserver.c ${libs}
 	${CC} ${CFLAGS} -o GBNserver GBNserver.c ${libs}
 
 test_server: GBNserver
-	./GBNserver ${test_args_server}
+	./GBNserver ${test_args_server} | tee tmp/server_stdout
 
 test_server_debug: GBNserver
-	export pargs='${test_args_server}'
+	export pargs='${test_args_server}' | tee tmp/server_stdout
 	gdb ./GBNserver
 
 test_client: GBNclient
-	./GBNclient ${test_args_client}
+	./GBNclient ${test_args_client} | tee tmp/client_stdout
 
 .PHONY: all clean test test_server test_client
