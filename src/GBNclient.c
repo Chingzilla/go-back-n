@@ -48,11 +48,14 @@ int file_location;
 // Copy data from file and put in packet. Returns number of bytes writen
 int file_to_packet(FILE *fin, GBNPacket packet){
     int nbytes = fread(packet->data, sizeof(char), MAXDATASIZE, fin);
-    packet->size = nbytes;
+    packet->size = nbytes * sizeof(char);
     
-    printf("read %d from file. File location: %d\n", nbytes, file_location);
+    printf("read %d from file. File location: %d\n", packet->size, file_location);
     file_location++;
-    return nbytes;
+
+
+    printf("end reading file\n");
+    return packet->size;
 }
 
 #define TIMEOUT 500 // TODO: change to 50
@@ -143,7 +146,7 @@ int main(int argc, char *argv[]) {
     fd_set rfds;
 
     // Fill window with data from file
-    file_location = 0;
+    file_location = -1;
     for(int i=0; i < sws; i++){
         tmp_packet = rbw_get_packet_n(win_buff, i);
         file_to_packet(fd, tmp_packet);
@@ -191,12 +194,15 @@ int main(int argc, char *argv[]) {
             sws = lar->rev_win_size;
 
             int ack_n = rbw_get_n_ack(win_buff, lar);
-            if(ack_n < 0){
+            if(ack_n < -1){
                 printf("ack is behind the current LAR, ignoring\n");
                 continue;
             }
             
             // Read more packets into the window if needed
+            rbw_inc_head(win_buff, ack_n + 1); // Move head to LAR + 1
+            rbw_set_win_size(win_buff, sws);
+
             tmp_packet = rbw_get_packet_n(win_buff, 0);
             while(1){
                 if (tmp_packet == NULL){
@@ -205,10 +211,7 @@ int main(int argc, char *argv[]) {
 
                 printf("tmp_packet: %d file_location:%d\n", tmp_packet->seq_num, file_location);
 
-                if (tmp_packet->seq_num <= file_location){
-                    // Blank
-                    
-                }else{
+                if (tmp_packet->seq_num > file_location){
                     file_to_packet(fd, tmp_packet);
                     if( tmp_packet->size < MAXDATASIZE ){
                         fd_eof = 1;
@@ -217,15 +220,18 @@ int main(int argc, char *argv[]) {
                 }
                 tmp_packet = rbw_get_next_in_window(win_buff, tmp_packet);
             }
-            
-            rbw_inc_head(win_buff, ack_n + 1); // Move head to LAR + 1
-            rbw_set_win_size(win_buff, lar->rev_win_size);
         }else{
-            for(int i=0; i < sws; i++){
-                rbw_get_packet_n(win_buff, i)->recvd = 0;
+            tmp_packet = rbw_get_packet_n(win_buff, 0);
+            get_timeout(tmp_packet->send_time, &time_out);
+            if(time_out.tv_sec == 0 && time_out.tv_usec == 0){
+                for(int i=0; i < sws; i++){
+                    rbw_get_packet_n(win_buff, i)->recvd = 0;
+                }
             }
         }
     }
+
     fclose(logfile);
     fclose(fd);
+    return 0;
 }

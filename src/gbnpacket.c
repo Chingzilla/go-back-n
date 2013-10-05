@@ -11,7 +11,9 @@ int send_packet(GBNPacket self, int socket_handler, struct sockaddr_in sendto){
     memcpy(buffer+PHEADERSIZE, self->data, MAXDATASIZE);
 
     // Send the packet to the server
-    bytes_sent= sendto_(socket_handler,buffer, PACKETSIZE, 0, (struct sockaddr *) &sendto, sizeof(sendto));
+    int packet_size = self->size + 2;
+    printf("sending packet size: %d\n", packet_size);
+    bytes_sent= sendto_(socket_handler, buffer, packet_size, 0, (struct sockaddr *) &sendto, sizeof(sendto));
     // If  packet sent
     if(bytes_sent >0)
     { 
