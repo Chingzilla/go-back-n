@@ -43,12 +43,15 @@ int logevent(char *event, int seq_num, int free_slots, int lar, int lfs){
     return 0;
 }
 
+int file_location;
+
 // Copy data from file and put in packet. Returns number of bytes writen
 int file_to_packet(FILE *fin, GBNPacket packet){
     int nbytes = fread(packet->data, sizeof(char), MAXDATASIZE, fin);
     packet->size = nbytes;
     
-    printf("read %d from file\n", nbytes);
+    printf("read %d from file. File location: %d\n", nbytes, file_location);
+    file_location++;
     return nbytes;
 }
 
@@ -107,7 +110,7 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error opening logfile: %s\n", argv[6]);
             exit(1);
         }
-    fprintf(logfile, "*** Starting Server ***\n");
+    fprintf(logfile, "*** Starting Client ***\n");
     fflush(logfile);
 
     // Open file to send
@@ -129,7 +132,6 @@ int main(int argc, char *argv[]) {
     RingBufferWindow win_buff;
     int sws = 9; // Per assignment
     int lfs;
-    int free_space = 9;
 
     rbw_init(&win_buff, sws);
 
@@ -141,6 +143,7 @@ int main(int argc, char *argv[]) {
     fd_set rfds;
 
     // Fill window with data from file
+    file_location = 0;
     for(int i=0; i < sws; i++){
         tmp_packet = rbw_get_packet_n(win_buff, i);
         file_to_packet(fd, tmp_packet);
@@ -187,13 +190,33 @@ int main(int argc, char *argv[]) {
             logevent("Receive", lar->seq_num, lar->rev_win_size, lar_cache, lfs);
             sws = lar->rev_win_size;
 
-            //TODO: Update window and buffer
             int ack_n = rbw_get_n_ack(win_buff, lar);
             if(ack_n < 0){
                 printf("ack is behind the current LAR, ignoring\n");
                 continue;
             }
-            //TODO read more packets from file
+            
+            // Read more packets into the window if needed
+            tmp_packet = rbw_get_packet_n(win_buff, 0);
+            while(1){
+                if (tmp_packet == NULL){
+                    break;
+                }
+
+                printf("tmp_packet: %d file_location:%d\n", tmp_packet->seq_num, file_location);
+
+                if (tmp_packet->seq_num <= file_location){
+                    // Blank
+                    
+                }else{
+                    file_to_packet(fd, tmp_packet);
+                    if( tmp_packet->size < MAXDATASIZE ){
+                        fd_eof = 1;
+                        break;
+                    }
+                }
+                tmp_packet = rbw_get_next_in_window(win_buff, tmp_packet);
+            }
             
             rbw_inc_head(win_buff, ack_n + 1); // Move head to LAR + 1
             rbw_set_win_size(win_buff, lar->rev_win_size);
