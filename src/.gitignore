@@ -1,3 +1,7 @@
 GBNserver
 GBNclient
 *.o
+
+tmp/server*
+tmp/client*
+tmp/file_out
