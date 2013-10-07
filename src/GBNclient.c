@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
     // Send packets
     while(1){
         // Send Packets in window
-        for(int i=0; i < sws; i++){
+        for(int i=0; i == 0 || i < sws; i++){
             tmp_packet = rbw_get_packet_n(win_buff, i);
             if(tmp_packet->recvd){
                 continue;
@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
             tmp_packet = rbw_get_packet_n(win_buff, 0);
             get_timeout(tmp_packet->send_time, &time_out);
             if(time_out.tv_sec == 0 && time_out.tv_usec == 0){
-                for(int i=0; i < sws; i++){
+                for(int i=0; i == 0 || i < sws; i++){
                     rbw_get_packet_n(win_buff, i)->recvd = 0;
                 }
             }
