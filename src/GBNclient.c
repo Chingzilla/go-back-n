@@ -57,23 +57,26 @@ int file_to_packet(FILE *fin, GBNPacket packet){
     return packet->size;
 }
 
-#define TIMEOUT 500 // TODO: change to 50
+#define TIMEOUT 50000 // 50ms
 int get_timeout(struct timeval start, struct timeval *timeout){
     struct timeval current;
     gettimeofday(&current, NULL);
 
-    double diff;
+    long diff;
 
-    diff = (current.tv_sec - start.tv_sec) * 1000 + ( current.tv_usec - start.tv_usec);
 
-    if( diff > TIMEOUT ){
+    diff = (current.tv_sec - start.tv_sec) * 1000000 + (current.tv_usec - start.tv_usec);
+
+    long timeout_l = TIMEOUT - diff;
+
+    if( timeout_l < 0 ){
         timeout->tv_sec = 0;
         timeout->tv_usec = 0;
     }else{
-        timeout->tv_sec = 0;
-        timeout->tv_usec = (long)(TIMEOUT - diff);
+        timeout->tv_sec = timeout_l / 1000000;
+        timeout->tv_usec = timeout_l;
     }
-    printf("Timeout: %d\n", timeout->tv_usec);
+    printf("Timeout: %d:%d\n", timeout->tv_sec, timeout->tv_usec);
     return 0;
 }
 
