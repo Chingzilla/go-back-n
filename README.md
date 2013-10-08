@@ -1,7 +1,7 @@
 go-back-n
 =========
 
-Simple Server and Cilent application that using a Go Back N to tranfer files
+Simple Server and Client application that using a Go Back N to transfer files
 
 Usage
 =====
@@ -20,8 +20,8 @@ Working
 
 .Server:
 * Drops out-of-range packets
-* Ack with latest packet if packet is older
-* Working sliding window
+* Ack with latest packet if packet received is older
+* Working sliding window (using ringbuffer data structure)
 * Uses accumulative acks
 * Acks contain server's window size
 * Window size determined by LPRead
@@ -29,12 +29,13 @@ Working
 * Writes packets to disk
 * Logging
 * Exits cleanly at end of file
+* Correctly transfers files
 
 .Client:
 * Sends packets
 * Adjusts window to server (flow control)
-* Recovers for when window size = 0
-* Limits packets send by storing sent state
+* Recovers for when rws = 0
+* Limits packets re-send by storing sent state
 * Resends packets after timeout of 50ms
 * Exits on ether last frame ack or if packet is resent 10 times
 * Logging
