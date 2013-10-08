@@ -36,12 +36,8 @@ Working
 * Recovers for when window size = 0
 * Limits packets send by storing sent state
 * Resends packets after timeout of 50ms
+* Exits on ether last frame ack or if packet is resent 10 times
 * Logging
-
-Known Issues
-============
-1. client segfaults on break of main loop. Really weird bug where break or exit() causes the
-    program to segfult
 
 Copyright
 =========
