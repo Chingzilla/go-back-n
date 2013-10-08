@@ -180,6 +180,8 @@ int main(int argc, char *argv[]) {
         send_ack(ack, sock, clientAddr, addr_len);
         //} // comment to disable last ack drop test
 
+        //if(rws > 0) continue; // un-comment to test zero window size
+
         // Write data to file
         GBNPacket packet_to_read;
         while(lf_read < 0){
