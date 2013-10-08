@@ -25,17 +25,16 @@ FILE *logfile;
 
 int logevent(char *event, int seq_num, int free_slots, int lar, int lfs){
 
-    time_t current_time = time(NULL);
-    char *strtime = ctime(&current_time);
-    strtime[strlen(strtime) - 1] = '\0';
     char strbuf[100];
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);
     
     if(free_slots >= 0){
-        sprintf(strbuf, "%s: <%s> <seq:%d> [free:%d] <LAR:%d> <LFS:%d>\n",
-          strtime, event, seq_num, free_slots, lar, lfs);
+        sprintf(strbuf, "%d.%d: <%s> <seq:%d> [free:%d] <LAR:%d> <LFS:%d>\n",
+          current_time.tv_sec, current_time.tv_usec, event, seq_num, free_slots, lar, lfs);
     } else {
-        sprintf(strbuf, "%s: <%s> <seq:%d> <LAR:%d> <LFS:%d>\n",
-          strtime, event, seq_num, lar, lfs);
+        sprintf(strbuf, "%d.%d: <%s> <seq:%d> <LAR:%d> <LFS:%d>\n",
+          current_time.tv_sec, current_time.tv_usec, event, seq_num, lar, lfs);
     }
     printf(strbuf);
     fprintf(logfile, strbuf);
