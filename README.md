@@ -28,21 +28,20 @@ Working
 * Packets are properly stored in window
 * Writes packets to disk
 * Logging
+* Exits cleanly at end of file
 
 .Client:
 * Sends packets
 * Adjusts window to server (flow control)
 * Recovers for when window size = 0
 * Limits packets send by storing sent state
-* Resends packets after timeout
+* Resends packets after timeout of 50ms
 * Logging
 
 Known Issues
 ============
 1. client segfaults on break of main loop. Really weird bug where break or exit() causes the
     program to segfult
-2. server doesn't detect end-of-file and waits indefinitely.
-3. Timeout is too fast (nano-seconds vs micro-seconds)?
 
 Copyright
 =========
