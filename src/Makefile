@@ -26,14 +26,12 @@ GBNserver: GBNserver.c ${libs}
 	${CC} ${CFLAGS} -o GBNserver GBNserver.c ${libs}
 
 test_server: GBNserver
-	./GBNserver ${test_args_server} | tee tmp/server_stdout
-
-test_server_debug: GBNserver
-	export pargs='${test_args_server}' | tee tmp/server_stdout
-	gdb ./GBNserver
+	#./GBNserver ${test_args_server} | tee tmp/server_stdout
+	./GBNserver ${test_args_server}
 	md5sum tmp/file_in tmp/file_out
 
 test_client: GBNclient
-	./GBNclient ${test_args_client} | tee tmp/client_stdout
+	#./GBNclient ${test_args_client} | tee tmp/client_stdout
+	./GBNclient ${test_args_client}
 
 .PHONY: all clean test test_server test_client
