@@ -124,7 +124,6 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error opening file %s\n", argv[5]);
         exit(1);
     }
-    int fd_eof = 0;
 
     // Get file size
     fseek(fd, 0, SEEK_END);
@@ -153,14 +152,23 @@ int main(int argc, char *argv[]) {
         tmp_packet = rbw_get_packet_n(win_buff, i);
         file_to_packet(fd, tmp_packet);
         if( tmp_packet->size < MAXDATASIZE ){
-            fd_eof = 1;
             sws = i;
             break;
         }
+
     }
+
+    int last_packet_try_count = 0;
 
     // Send packets
     while(1){
+
+        // Exit if at last frame and server hasn't acked in 10 tries
+        tmp_packet = rbw_get_packet_n(win_buff, 0);
+        if(tmp_packet->size < MAXDATASIZE && last_packet_try_count++ < 10){
+            break;
+        }
+            
         // Send Packets in window
         for(int i=0; i == 0 || i < sws; i++){
             tmp_packet = rbw_get_packet_n(win_buff, i);
@@ -222,7 +230,6 @@ int main(int argc, char *argv[]) {
                 if (tmp_packet->seq_num > file_location){
                     file_to_packet(fd, tmp_packet);
                     if( tmp_packet->size < MAXDATASIZE ){
-                        fd_eof = 1;
                         break;
                     }
                 }
