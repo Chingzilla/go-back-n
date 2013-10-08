@@ -200,6 +200,12 @@ int main(int argc, char *argv[]) {
                 printf("ack is behind the current LAR, ignoring\n");
                 continue;
             }
+
+            // Exit if ack is for last frame
+            tmp_packet = rbw_get_packet_n(win_buff, ack_n);
+            if(tmp_packet->size < MAXDATASIZE){
+                break;
+            }
             
             // Read more packets into the window if needed
             rbw_inc_head(win_buff, ack_n + 1); // Move head to LAR + 1
