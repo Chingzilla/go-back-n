@@ -172,9 +172,13 @@ int main(int argc, char *argv[]) {
         rbw_inc_head(recv_win, i);
         rbw_set_win_size(recv_win, rws);
 
+        /**** un-comment to test no last ack ****/
+        GBNPacket ack_packet = rbw_get_packet_n(recv_win, -1);
+        //if(ack_packet->size == MAXDATASIZE){ // comment to disable last ack drop test
         rbw_get_ack_n(recv_win, -1, ack);
         logevent("Send", ack->seq_num, free_space, lf_read, 0, rws);
         send_ack(ack, sock, clientAddr, addr_len);
+        //} // comment to disable last ack drop test
 
         // Write data to file
         GBNPacket packet_to_read;

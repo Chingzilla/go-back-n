@@ -159,14 +159,17 @@ int main(int argc, char *argv[]) {
     }
 
     int last_packet_try_count = 0;
+    int eof = 0;
 
     // Send packets
     while(1){
 
         // Exit if at last frame and server hasn't acked in 10 tries
         tmp_packet = rbw_get_packet_n(win_buff, 0);
-        if(tmp_packet->size < MAXDATASIZE && last_packet_try_count++ < 10){
-            break;
+        if(eof == 1){
+            if(last_packet_try_count++ > 10){
+                break;
+            }
         }
             
         // Send Packets in window
@@ -230,6 +233,7 @@ int main(int argc, char *argv[]) {
                 if (tmp_packet->seq_num > file_location){
                     file_to_packet(fd, tmp_packet);
                     if( tmp_packet->size < MAXDATASIZE ){
+                        eof = 1;
                         break;
                     }
                 }
