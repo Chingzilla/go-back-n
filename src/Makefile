@@ -31,6 +31,7 @@ test_server: GBNserver
 test_server_debug: GBNserver
 	export pargs='${test_args_server}' | tee tmp/server_stdout
 	gdb ./GBNserver
+	md5sum tmp/file_in tmp/file_out
 
 test_client: GBNclient
 	./GBNclient ${test_args_client} | tee tmp/client_stdout
